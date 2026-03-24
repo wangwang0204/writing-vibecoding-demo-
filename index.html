@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知識轉化靈魂-心理測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(120deg, #f0e6ff 0%, #e6e6ff 100%);
+        }
+        .page {
+            display: none;
+            opacity: 0;
+            animation: fadeIn 0.8s forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .active-page {
+            display: block;
+        }
+        .result-card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: background-color 0.5s ease;
+        }
+        .btn-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen font-sans">
+
+    <div id="app" class="w-full max-w-md mx-auto p-4">
+
+        <!-- Page 1: Name Input -->
+        <div id="page-name" class="page active-page text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">探索你的知識轉化靈魂</h1>
+            <p class="text-gray-600 mb-8">在資訊的汪洋中，你如何萃取、重組、並賦予知識新的生命？</p>
+            <input id="name-input" type="text" placeholder="請輸入你的姓名" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-6 text-lg">
+            <button onclick="startTest()" class="w-full bg-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors shadow-lg">開始測驗</button>
+        </div>
+
+        <!-- Page 2: Question 1 -->
+        <div id="page-q1" class="page">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Q1: 當接觸到一個全新、複雜的知識領域時，你的第一反應是？</h2>
+                <p class="text-gray-500 mb-6">例如：量子力學、區塊鏈、或是最新的藝術史流派。</p>
+                <div class="space-y-4">
+                    <button onclick="answer('A')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-blue-100">A. 立刻找相關的論文、硬核資料，從最源頭的定義開始啃。</button>
+                    <button onclick="answer('B')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-red-100">B. 先找懶人包、故事性強的影片，感受一下「它大概在說什麼」。</button>
+                    <button onclick="answer('C')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-yellow-100">C. 找找看有沒有相關的紀錄片、圖片或心智圖，視覺化的東西更好吸收。</button>
+                    <button onclick="answer('D')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-green-100">D. 馬上動手玩！找個 App、做個小實驗，在實作中直接感受。</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Question 2 -->
+        <div id="page-q2" class="page">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Q2: 在轉化知識準備分享時，你最擔憂的是？</h2>
+                <p class="text-gray-500 mb-6">假設你要向一群新手介紹你熟悉的領域。</p>
+                <div class="space-y-4">
+                    <button onclick="answer('A')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-blue-100">A. 內容不夠精確、嚴謹，被專家抓到小辮子。</button>
+                    <button onclick="answer('B')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-red-100">B. 過程太無聊，聽眾滑手機或直接睡著。</button>
+                    <button onclick="answer('C')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-yellow-100">C. 簡報或圖卡不夠美，視覺上沒有衝擊力。</button>
+                    <button onclick="answer('D')" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-green-100">D. 聽眾覺得「聽了很棒，但不知道怎麼用」，缺少實用性。</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: Question 3 -->
+        <div id="page-q3" class="page">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Q3: 如果有一個萬能的 AI 助手，你會最常用它來做什麼？</h2>
+                <p class="text-gray-500 mb-6">它可以完美執行你的所有指令。</p>
+                <div class="space-y-4">
+                    <button onclick="answer('A', true)" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-blue-100">A. 幫我交叉比對所有文獻，驗證資訊的正確性與出處。</button>
+                    <button onclick="answer('B', true)" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-red-100">B. 幫我把複雜的數據，自動生成生動有趣的故事或譬喻。</button>
+                    <button onclick="answer('C', true)" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-yellow-100">C. 根據我的草稿，生成風格一致、視覺效果驚艷的資訊圖表。</button>
+                    <button onclick="answer('D', true)" class="btn-option w-full text-left p-4 bg-gray-100 rounded-lg hover:bg-green-100">D. 幫我把理論知識，快速轉化成可執行的步驟清單或教學腳本。</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 5: Result -->
+        <div id="page-result" class="page">
+             <div id="result-card" class="result-card rounded-2xl p-8 text-white text-center transition-all duration-500">
+                <p id="result-greeting" class="text-xl opacity-90"></p>
+                <h2 id="result-title" class="text-4xl font-black my-4"></h2>
+                <p id="result-description" class="text-lg opacity-90"></p>
+            </div>
+            <button onclick="restart()" class="mt-8 w-full text-purple-600 font-bold py-3 px-6 rounded-lg hover:bg-purple-100 transition-colors">再測一次</button>
+        </div>
+    </div>
+
+    <script>
+        const pages = document.querySelectorAll('.page');
+        const appState = {
+            name: '',
+            answers: [],
+            currentPage: 0
+        };
+
+        const resultsData = {
+            A: {
+                colorClass: 'bg-blue-600',
+                title: '硬核考據派',
+                description: '你深信知識的基石在於精準與真實。如果有人說「網路說...」，你可能會默默打開 10 個分頁開始 fact check。對你來說，分享知識就像蓋房子，地基不穩，一切都是空談。'
+            },
+            B: {
+                colorClass: 'bg-red-600',
+                title: '靈魂說書人',
+                description: '你天生就懂如何讓知識「活」起來。對你而言，再複雜的理論都能找到一個動人的切入點。你痛恨枯燥，如果知識分享是一場電影，你就是那個絕不讓觀眾有機會看手機的導演。'
+            },
+            C: {
+                colorClass: 'bg-yellow-500',
+                title: '視覺魔術師',
+                description: '「一圖勝千言」是你的座右銘。你堅信好的視覺呈現能讓吸收效率提升 300%。你的腦中彷彿內建 Canva Pro，能輕易地將任何資訊轉化為優雅的圖表和吸睛的簡報，讓人過目不忘。'
+            },
+            D: {
+                colorClass: 'bg-green-600',
+                title: '實踐佈道者',
+                description: '「所以，這東西能幹嘛？」是你最關心的問題。你熱衷於將理論落地，讓知識從殿堂走向日常。對你來說，最有價值的知識，就是能立刻動手使用、並解決實際問題的知識。'
+            }
+        };
+
+        function showPage(pageId) {
+            pages.forEach(page => {
+                page.classList.remove('active-page');
+            });
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active-page');
+            }
+        }
+
+        function startTest() {
+            const nameInput = document.getElementById('name-input');
+            if (nameInput.value.trim() === '') {
+                alert('請告訴我們你的名字！');
+                return;
+            }
+            appState.name = nameInput.value;
+            appState.currentPage = 1;
+            showPage('page-q1');
+        }
+
+        function answer(choice, isLast = false) {
+            appState.answers.push(choice);
+            if (isLast) {
+                calculateAndShowResult();
+            } else {
+                appState.currentPage++;
+                showPage(`page-q${appState.currentPage + 1}`);
+            }
+        }
+        
+        function calculateAndShowResult() {
+            const counts = appState.answers.reduce((acc, value) => {
+                acc[value] = (acc[value] || 0) + 1;
+                return acc;
+            }, {});
+
+            const majority = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            
+            const resultData = resultsData[majority];
+            
+            document.getElementById('result-greeting').textContent = `${appState.name}，你的知識轉化靈魂是...`;
+            document.getElementById('result-title').textContent = resultData.title;
+            document.getElementById('result-description').textContent = resultData.description;
+            
+            const resultCard = document.getElementById('result-card');
+            // Remove old color classes
+            Object.values(resultsData).forEach(data => resultCard.classList.remove(data.colorClass));
+            // Add new one
+            resultCard.classList.add(resultData.colorClass);
+
+            showPage('page-result');
+        }
+
+        function restart() {
+            appState.name = '';
+            appState.answers = [];
+            appState.currentPage = 0;
+            document.getElementById('name-input').value = '';
+            showPage('page-name');
+        }
+
+    </script>
+
+</body>
+</html>
