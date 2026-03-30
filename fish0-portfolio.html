@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Portfolio — 魚0</title>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Kaisei+Decol:wght@400;700&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root {
+  --blue:    #a8d4f0;
+  --blue-d:  #5ba8d8;
+  --blue-l:  #d6edfb;
+  --blue-xl: #eef7fd;
+  --cream:   #fdfbf8;
+  --ink:     #2c3e50;
+  --ink-mid: #607080;
+  --ink-soft:#99aab8;
+  --blush:   #f8e8e0;
+  --dot:     rgba(91,168,216,0.22);
+  --shadow:  rgba(168,212,240,0.35);
+  --ff-title: 'Kaisei Decol', serif;
+  --ff-hand:  'Gochi Hand', cursive;
+  --ff-body:  'Noto Sans TC', sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-weight: 300;
+  overflow-x: hidden;
+  cursor: none;
+  position: relative;
+}
+
+/* ══════════════════════════════════════
+   HALFTONE BACKGROUNDS
+══════════════════════════════════════ */
+
+/* Full-page subtle dot grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, var(--dot) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+  opacity: 1;
+}
+
+/* Hero halftone large dots (decorative) */
+.halftone-hero {
+  position: absolute;
+  top: -60px; right: -80px;
+  width: 520px; height: 520px;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.halftone-hero canvas { display: block; }
+
+/* Section halftone accent */
+.halftone-section {
+  position: absolute; pointer-events: none; z-index: 0; overflow: hidden;
+}
+
+/* ══════════════════════════════════════
+   CURSOR
+══════════════════════════════════════ */
+.cursor {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--blue-d); transform: translate(-50%,-50%);
+  transition: width .22s, height .22s, background .22s;
+  mix-blend-mode: multiply;
+}
+.cursor-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--blue-d); transform: translate(-50%,-50%);
+  transition: width .22s, height .22s; opacity: 0.5;
+}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  padding: 18px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+nav::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(253,251,248,0.88);
+  backdrop-filter: blur(10px); z-index: -1;
+  border-bottom: 1px solid rgba(168,212,240,0.3);
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.nav-badge {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--blue); display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-hand); font-size: 0.85rem; color: white;
+  box-shadow: 0 3px 10px var(--shadow);
+}
+.nav-title {
+  font-family: var(--ff-title); font-size: 1rem;
+  color: var(--ink); letter-spacing: 0.04em;
+}
+.nav-title span { color: var(--blue-d); }
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a {
+  font-family: var(--ff-body); font-size: 0.82rem;
+  color: var(--ink-mid); text-decoration: none; letter-spacing: 0.06em;
+  position: relative; transition: color .2s;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -3px; left: 0;
+  width: 0; height: 2px; background: var(--blue);
+  border-radius: 2px; transition: width .3s ease;
+}
+.nav-links a:hover { color: var(--blue-d); }
+.nav-links a:hover::after { width: 100%; }
+
+/* ══════════════════════════════════════
+   REVEAL
+══════════════════════════════════════ */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.rd1 { transition-delay: .1s; } .rd2 { transition-delay: .2s; }
+.rd3 { transition-delay: .32s; } .rd4 { transition-delay: .44s; }
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding: 100px 48px 60px;
+  position: relative; overflow: hidden; z-index: 1;
+}
+
+.hero-left { flex: 1; position: relative; z-index: 2; max-width: 580px; }
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue-l); border-radius: 100px;
+  padding: 6px 16px; margin-bottom: 28px;
+  font-size: 0.75rem; color: var(--blue-d);
+  letter-spacing: 0.1em; font-family: var(--ff-body);
+}
+.hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue-d); animation: blink 1.8s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+
+.hero-name {
+  font-family: var(--ff-hand); font-size: clamp(3rem, 8vw, 5.5rem);
+  color: var(--ink); line-height: 1.1; margin-bottom: 6px;
+}
+.hero-name .wave {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--blue-d), #8ec5e8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-family: var(--ff-title); font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  color: var(--ink-mid); margin-bottom: 24px; font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.hero-desc {
+  font-size: 0.92rem; color: var(--ink-mid); line-height: 1.85;
+  max-width: 420px; margin-bottom: 40px;
+}
+
+.hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue-d); color: white;
+  padding: 13px 28px; border-radius: 100px; border: none;
+  font-family: var(--ff-body); font-size: 0.85rem; letter-spacing: 0.06em;
+  cursor: none; text-decoration: none;
+  box-shadow: 0 6px 20px var(--shadow);
+  transition: transform .25s, box-shadow .25s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--shadow); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--blue-d);
+  padding: 12px 28px; border-radius: 100px;
+  border: 1.5px solid var(--blue);
+  font-family: var(--ff-body); font-size: 0.85rem; letter-spacing: 0.06em;
+  cursor: none; text-decoration: none;
+  transition: background .25s, color .25s;
+}
+.btn-ghost:hover { background: var(--blue-l); }
+
+/* Hero right — sticker cluster */
+.hero-right {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1;
+}
+.sticker-cluster { position: relative; width: 340px; height: 340px; }
+.sticker {
+  position: absolute; border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(91,168,216,0.2);
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.s1 {
+  width: 170px; height: 170px; top: 0; left: 0;
+  background: var(--blue-l); transform: rotate(-4deg);
+  animation: floatA 5s ease-in-out infinite;
+}
+.s2 {
+  width: 130px; height: 130px; top: 20px; right: 0;
+  background: var(--blush); transform: rotate(5deg);
+  animation: floatB 6s ease-in-out infinite;
+}
+.s3 {
+  width: 150px; height: 150px; bottom: 10px; left: 30px;
+  background: white; border: 2px solid var(--blue-l); transform: rotate(2deg);
+  animation: floatA 7s ease-in-out infinite .5s;
+}
+.s4 {
+  width: 120px; height: 120px; bottom: 20px; right: 20px;
+  background: var(--blue); transform: rotate(-6deg);
+  animation: floatB 5.5s ease-in-out infinite .8s;
+}
+@keyframes floatA { 0%,100%{transform:rotate(-4deg) translateY(0);} 50%{transform:rotate(-4deg) translateY(-10px);} }
+@keyframes floatB { 0%,100%{transform:rotate(5deg) translateY(0);} 50%{transform:rotate(5deg) translateY(10px);} }
+
+.sticker-inner { font-family: var(--ff-hand); text-align: center; padding: 16px; color: var(--blue-d); }
+.sticker-inner .emoji { font-size: 2.4rem; display: block; margin-bottom: 4px; }
+.sticker-inner .label { font-size: 0.78rem; opacity: 0.8; }
+.s4 .sticker-inner { color: white; }
+
+/* Halftone large dot arc behind sticker */
+.hero-arc {
+  position: absolute; top: -40px; right: -40px;
+  width: 420px; height: 420px; z-index: 0; pointer-events: none;
+}
+
+/* ══════════════════════════════════════
+   SECTION SHARED
+══════════════════════════════════════ */
+.section-wrap {
+  padding: 90px 48px;
+  max-width: 1200px; margin: 0 auto;
+  position: relative; z-index: 1;
+}
+.section-header { text-align: center; margin-bottom: 56px; }
+.section-eyebrow {
+  display: inline-block; font-size: 0.72rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--blue-d);
+  background: var(--blue-xl); padding: 4px 14px; border-radius: 100px;
+  margin-bottom: 14px; font-family: var(--ff-body);
+}
+.section-title {
+  font-family: var(--ff-title); font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--ink); margin-bottom: 12px; font-weight: 700;
+}
+.section-sub {
+  font-size: 0.88rem; color: var(--ink-soft); line-height: 1.7; max-width: 480px; margin: 0 auto;
+}
+
+/* ══════════════════════════════════════
+   ABOUT STRIP
+══════════════════════════════════════ */
+#about {
+  background: var(--blue-xl);
+  border-top: 1px solid rgba(168,212,240,0.4);
+  border-bottom: 1px solid rgba(168,212,240,0.4);
+  position: relative; overflow: hidden;
+}
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 64px; align-items: center;
+}
+@media(max-width:768px){.about-grid{grid-template-columns:1fr;gap:36px;}}
+
+.about-avatar {
+  position: relative; display: flex; justify-content: center;
+}
+.avatar-ring {
+  width: 220px; height: 220px; border-radius: 50%;
+  border: 3px dashed var(--blue); display: flex; align-items: center; justify-content: center;
+  animation: spinSlow 20s linear infinite;
+}
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+.avatar-inner {
+  width: 180px; height: 180px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-l), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-hand); font-size: 4.5rem;
+  animation: spinSlow 20s linear infinite reverse;
+  box-shadow: 0 8px 30px var(--shadow);
+}
+
+.about-text {}
+.about-name {
+  font-family: var(--ff-hand); font-size: 2.2rem; color: var(--ink); margin-bottom: 8px;
+}
+.about-name span { color: var(--blue-d); }
+.about-bio { font-size: 0.9rem; color: var(--ink-mid); line-height: 1.85; margin-bottom: 24px; }
+.about-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.about-tag {
+  background: white; border: 1px solid var(--blue-l);
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 0.75rem; color: var(--blue-d); letter-spacing: 0.06em;
+}
+
+/* ══════════════════════════════════════
+   PORTFOLIO — 4 EDITABLE CARDS
+══════════════════════════════════════ */
+#portfolio { position: relative; overflow: hidden; }
+
+.portfolio-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media(max-width:768px){.portfolio-grid{grid-template-columns:1fr;}}
+
+/* Card */
+.pcard {
+  background: white;
+  border-radius: 24px;
+  border: 1.5px solid rgba(168,212,240,0.35);
+  box-shadow: 0 6px 24px rgba(168,212,240,0.18);
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease;
+  position: relative;
+}
+.pcard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 36px rgba(168,212,240,0.3);
+}
+
+/* Image area */
+.pcard-img {
+  width: 100%; height: 220px;
+  background: var(--blue-xl);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none;
+}
+.pcard-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: none;
+}
+.pcard-img img.loaded { display: block; }
+.pcard-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: var(--ink-soft);
+  transition: opacity .2s;
+}
+.pcard-img:hover .pcard-placeholder { opacity: 0.5; }
+.placeholder-icon { font-size: 2.5rem; }
+.placeholder-text { font-size: 0.75rem; letter-spacing: 0.08em; font-family: var(--ff-body); }
+
+/* Upload overlay */
+.upload-btn {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .25s;
+  background: rgba(168,212,240,0.25);
+  cursor: none;
+}
+.pcard-img:hover .upload-btn { opacity: 1; }
+.upload-pill {
+  background: white; border: 1.5px solid var(--blue);
+  color: var(--blue-d); padding: 8px 20px; border-radius: 100px;
+  font-size: 0.78rem; letter-spacing: 0.06em; font-family: var(--ff-body);
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 12px rgba(91,168,216,0.2);
+}
+.file-input { display: none; }
+
+/* Halftone corner decoration on card */
+.pcard-corner {
+  position: absolute; top: 0; right: 0;
+  width: 80px; height: 80px;
+  overflow: hidden; pointer-events: none; z-index: 1;
+}
+.pcard-corner canvas { display: block; }
+
+/* Card body */
+.pcard-body { padding: 22px 24px 24px; }
+.pcard-num {
+  font-family: var(--ff-hand); font-size: 0.75rem; color: var(--blue-d);
+  letter-spacing: 0.12em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.pcard-num::before { content: ''; display: block; width: 18px; height: 1.5px; background: var(--blue); border-radius: 2px; }
+
+/* Editable title */
+.pcard-title {
+  font-family: var(--ff-title); font-size: 1.2rem; color: var(--ink);
+  margin-bottom: 8px; font-weight: 700;
+  outline: none; border-radius: 6px; min-height: 1.4em;
+  transition: background .2s; cursor: text; word-break: break-word;
+}
+.pcard-title:focus { background: var(--blue-xl); padding: 2px 6px; }
+.pcard-title:empty::before { content: attr(data-placeholder); color: var(--ink-soft); font-weight: 400; }
+
+/* Editable description */
+.pcard-desc {
+  font-size: 0.84rem; color: var(--ink-mid); line-height: 1.75;
+  outline: none; border-radius: 6px; min-height: 3em;
+  transition: background .2s; cursor: text;
+}
+.pcard-desc:focus { background: var(--blue-xl); padding: 4px 6px; }
+.pcard-desc:empty::before { content: attr(data-placeholder); color: var(--ink-soft); }
+
+/* Tags row */
+.pcard-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.pcard-tag {
+  background: var(--blue-xl); color: var(--blue-d);
+  padding: 3px 12px; border-radius: 100px; font-size: 0.7rem;
+  letter-spacing: 0.06em; font-family: var(--ff-body);
+  cursor: pointer; transition: background .2s;
+  border: none; outline: none;
+}
+.pcard-tag:hover { background: var(--blue-l); }
+.pcard-tag[contenteditable] { cursor: text; }
+.pcard-tag:focus { background: var(--blue-l); }
+
+/* Edit hint */
+.edit-hint {
+  text-align: center; margin-bottom: 28px; margin-top: -20px;
+}
+.edit-hint span {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.75rem; color: var(--ink-soft); letter-spacing: 0.06em;
+  background: var(--blue-xl); padding: 5px 14px; border-radius: 100px;
+}
+
+/* ══════════════════════════════════════
+   HALFTONE DECO STRIP
+══════════════════════════════════════ */
+.halftone-strip {
+  height: 80px; overflow: hidden; position: relative;
+}
+
+/* ══════════════════════════════════════
+   CONTACT
+══════════════════════════════════════ */
+#contact {
+  background: var(--blue-xl);
+  border-top: 1px solid rgba(168,212,240,0.4);
+  position: relative; overflow: hidden;
+}
+.contact-card {
+  background: white; border-radius: 28px;
+  border: 1.5px solid rgba(168,212,240,0.4);
+  padding: 52px 48px;
+  text-align: center; max-width: 600px; margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(168,212,240,0.18);
+  position: relative; z-index: 1;
+}
+.contact-emoji { font-size: 3rem; display: block; margin-bottom: 18px; }
+.contact-title { font-family: var(--ff-title); font-size: 1.9rem; color: var(--ink); margin-bottom: 10px; }
+.contact-sub { font-size: 0.88rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 32px; }
+.contact-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.contact-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--blue-xl); color: var(--blue-d);
+  padding: 10px 22px; border-radius: 100px;
+  font-size: 0.82rem; letter-spacing: 0.06em; text-decoration: none;
+  border: 1px solid var(--blue-l); transition: background .22s, transform .22s;
+}
+.contact-link:hover { background: var(--blue-l); transform: translateY(-2px); }
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+footer {
+  background: var(--ink); color: rgba(255,255,255,0.4);
+  padding: 28px 48px; text-align: center;
+  font-size: 0.72rem; letter-spacing: 0.12em;
+  font-family: var(--ff-body);
+}
+footer span { color: var(--blue); }
+
+/* ══════════════════════════════════════
+   LOADER
+══════════════════════════════════════ */
+#loader {
+  position: fixed; inset: 0; z-index: 9990;
+  background: var(--cream);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  transition: opacity .5s, visibility .5s;
+}
+#loader.hidden { opacity: 0; visibility: hidden; }
+.loader-fish {
+  font-family: var(--ff-hand); font-size: 3.5rem; color: var(--blue-d);
+  animation: fishBob 1s ease-in-out infinite alternate;
+}
+@keyframes fishBob { from{transform:translateY(-6px);} to{transform:translateY(6px);} }
+.loader-bar-wrap { width: 160px; height: 3px; background: var(--blue-l); border-radius: 4px; overflow: hidden; }
+.loader-bar { height: 100%; background: var(--blue-d); width: 0%; transition: width 1.4s cubic-bezier(.4,0,.2,1); border-radius: 4px; }
+.loader-text { font-family: var(--ff-body); font-size: 0.7rem; color: var(--ink-soft); letter-spacing: 0.18em; }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-fish">魚</div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="lbar"></div></div>
+  <div class="loader-text">loading portfolio...</div>
+</div>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#hero">
+    <div class="nav-badge">魚</div>
+    <div class="nav-title">Design <span>Portfolio</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">關於</a></li>
+    <li><a href="#portfolio">作品</a></li>
+    <li><a href="#contact">聯絡</a></li>
+  </ul>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <!-- halftone arc canvas (JS draws it) -->
+  <canvas id="hero-halftone" class="hero-arc" width="420" height="420"></canvas>
+
+  <div class="hero-left">
+    <div class="hero-tag reveal"><div class="dot"></div> Design × Life</div>
+    <div class="hero-name reveal rd1">
+      Hi, I'm <span class="wave">魚0</span> 🐟
+    </div>
+    <div class="hero-subtitle reveal rd2">Design Portfolio</div>
+    <p class="hero-desc reveal rd3">
+      把日常生活裡的美感記錄下來，<br>
+      設計不只是工作，更是一種生活方式。
+    </p>
+    <div class="hero-btns reveal rd4">
+      <a class="btn-primary" href="#portfolio">看看作品 ✨</a>
+      <a class="btn-ghost"  href="#about">關於我</a>
+    </div>
+  </div>
+
+  <div class="hero-right reveal rd2">
+    <div class="sticker-cluster">
+      <div class="sticker s1">
+        <div class="sticker-inner">
+          <span class="emoji">🎨</span>
+          <span class="label">Design</span>
+        </div>
+      </div>
+      <div class="sticker s2">
+        <div class="sticker-inner">
+          <span class="emoji">☁️</span>
+          <span class="label">Dream</span>
+        </div>
+      </div>
+      <div class="sticker s3">
+        <div class="sticker-inner">
+          <span class="emoji">📸</span>
+          <span class="label">Capture</span>
+        </div>
+      </div>
+      <div class="sticker s4">
+        <div class="sticker-inner">
+          <span class="emoji">🐟</span>
+          <span class="label">魚0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HALFTONE STRIP ══ -->
+<div class="halftone-strip" id="strip1"></div>
+
+<!-- ══ ABOUT ══ -->
+<section id="about">
+  <div class="section-wrap">
+    <div class="about-grid">
+      <div class="reveal">
+        <div class="about-avatar">
+          <div class="avatar-ring">
+            <div class="avatar-inner">🐟</div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal rd1">
+        <div class="about-name"><span>魚0</span> 的設計日常</div>
+        <p class="about-bio">
+          喜歡在生活裡找靈感，咖啡廳的光影、街角的色彩，<br>
+          都是設計的素材。相信好的設計應該讓人感覺舒服，<br>
+          就像一杯剛好的下午茶。☕
+        </p>
+        <div class="about-tags">
+          <span class="about-tag">UI / UX</span>
+          <span class="about-tag">品牌設計</span>
+          <span class="about-tag">插畫</span>
+          <span class="about-tag">排版</span>
+          <span class="about-tag">攝影</span>
+          <span class="about-tag">手寫字</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PORTFOLIO ══ -->
+<section id="portfolio">
+  <div class="section-wrap">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">✦ Selected Works</div>
+      <div class="section-title">我的作品集</div>
+      <div class="section-sub">點擊標題、描述可直接編輯，也可以上傳自己的圖片 🖼️</div>
+    </div>
+
+    <div class="edit-hint reveal rd1">
+      <span>✏️ 點擊任意文字即可編輯 · 點擊圖片區域可上傳照片</span>
+    </div>
+
+    <div class="portfolio-grid">
+
+      <!-- CARD 1 -->
+      <div class="pcard reveal">
+        <canvas class="pcard-corner" width="80" height="80" data-color="#a8d4f0"></canvas>
+        <div class="pcard-img" id="img1">
+          <div class="pcard-placeholder">
+            <span class="placeholder-icon">🖼️</span>
+            <span class="placeholder-text">點擊上傳圖片</span>
+          </div>
+          <img id="preview1" alt="作品圖片">
+          <div class="upload-btn" onclick="document.getElementById('file1').click()">
+            <div class="upload-pill">📁 選擇圖片</div>
+          </div>
+          <input type="file" class="file-input" id="file1" accept="image/*" onchange="loadImg(this,'preview1','img1')">
+        </div>
+        <div class="pcard-body">
+          <div class="pcard-num">01</div>
+          <div class="pcard-title" contenteditable="true" spellcheck="false" data-placeholder="作品名稱">品牌識別設計</div>
+          <div class="pcard-desc" contenteditable="true" spellcheck="false" data-placeholder="寫下這個作品的故事、靈感來源，或任何你想說的話...">一個以日系風格為基礎的品牌識別系統，從 logo 到包裝，用溫柔的藍色系傳遞品牌的溫度。</div>
+          <div class="pcard-tags">
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">品牌設計</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">排版</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">2024</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="pcard reveal rd1">
+        <canvas class="pcard-corner" width="80" height="80" data-color="#8ec5e8"></canvas>
+        <div class="pcard-img" id="img2">
+          <div class="pcard-placeholder">
+            <span class="placeholder-icon">📷</span>
+            <span class="placeholder-text">點擊上傳圖片</span>
+          </div>
+          <img id="preview2" alt="作品圖片">
+          <div class="upload-btn" onclick="document.getElementById('file2').click()">
+            <div class="upload-pill">📁 選擇圖片</div>
+          </div>
+          <input type="file" class="file-input" id="file2" accept="image/*" onchange="loadImg(this,'preview2','img2')">
+        </div>
+        <div class="pcard-body">
+          <div class="pcard-num">02</div>
+          <div class="pcard-title" contenteditable="true" spellcheck="false" data-placeholder="作品名稱">日常生活攝影</div>
+          <div class="pcard-desc" contenteditable="true" spellcheck="false" data-placeholder="寫下這個作品的故事...">在城市裡的漫步，用鏡頭記錄那些轉瞬即逝的光。光線在不同時刻有著不同的溫度，每一張都是獨一無二的瞬間。</div>
+          <div class="pcard-tags">
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">攝影</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">生活記錄</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">2024</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="pcard reveal rd2">
+        <canvas class="pcard-corner" width="80" height="80" data-color="#b8d8f0"></canvas>
+        <div class="pcard-img" id="img3">
+          <div class="pcard-placeholder">
+            <span class="placeholder-icon">✏️</span>
+            <span class="placeholder-text">點擊上傳圖片</span>
+          </div>
+          <img id="preview3" alt="作品圖片">
+          <div class="upload-btn" onclick="document.getElementById('file3').click()">
+            <div class="upload-pill">📁 選擇圖片</div>
+          </div>
+          <input type="file" class="file-input" id="file3" accept="image/*" onchange="loadImg(this,'preview3','img3')">
+        </div>
+        <div class="pcard-body">
+          <div class="pcard-num">03</div>
+          <div class="pcard-title" contenteditable="true" spellcheck="false" data-placeholder="作品名稱">手繪插畫集</div>
+          <div class="pcard-desc" contenteditable="true" spellcheck="false" data-placeholder="寫下這個作品的故事...">用水彩和代針筆記錄旅途中的風景，每一筆都是當下情緒的印記。慢下來，才能看見那些平時忽略的美。</div>
+          <div class="pcard-tags">
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">插畫</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">手繪</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">水彩</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="pcard reveal rd3">
+        <canvas class="pcard-corner" width="80" height="80" data-color="#a8d4f0"></canvas>
+        <div class="pcard-img" id="img4">
+          <div class="pcard-placeholder">
+            <span class="placeholder-icon">🌊</span>
+            <span class="placeholder-text">點擊上傳圖片</span>
+          </div>
+          <img id="preview4" alt="作品圖片">
+          <div class="upload-btn" onclick="document.getElementById('file4').click()">
+            <div class="upload-pill">📁 選擇圖片</div>
+          </div>
+          <input type="file" class="file-input" id="file4" accept="image/*" onchange="loadImg(this,'preview4','img4')">
+        </div>
+        <div class="pcard-body">
+          <div class="pcard-num">04</div>
+          <div class="pcard-title" contenteditable="true" spellcheck="false" data-placeholder="作品名稱">UI 介面設計</div>
+          <div class="pcard-desc" contenteditable="true" spellcheck="false" data-placeholder="寫下這個作品的故事...">為一個生活類 App 設計的全套介面，希望讓使用者在使用時有一種在翻閱手帳的溫暖感受。</div>
+          <div class="pcard-tags">
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">UI Design</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">App</div>
+            <div class="pcard-tag" contenteditable="true" spellcheck="false">Figma</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /portfolio-grid -->
+  </div>
+</section>
+
+<!-- ══ CONTACT ══ -->
+<section id="contact">
+  <div class="section-wrap">
+    <div class="contact-card reveal">
+      <span class="contact-emoji">✉️</span>
+      <div class="contact-title">一起聊聊吧</div>
+      <p class="contact-sub">喜歡交流設計想法、生活靈感，<br>或者只是想打個招呼都歡迎！</p>
+      <div class="contact-links">
+        <a class="contact-link" href="#">📧 Email</a>
+        <a class="contact-link" href="#">📸 Instagram</a>
+        <a class="contact-link" href="#">🎨 Behance</a>
+        <a class="contact-link" href="#">🐦 Twitter</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2025 <span>魚0</span> · Design Portfolio · Made with 🐟 & ☕
+</footer>
+
+<script>
+/* ══════════════════════════════════════
+   HALFTONE CANVAS UTILITY
+══════════════════════════════════════ */
+function drawHalftone(canvas, opts) {
+  const { w, h, color, spacing, minR, maxR, fade } = { w:420, h:420, spacing:22, minR:1, maxR:8, fade:true, ...opts };
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2;
+  for (let y = 0; y < h; y += spacing) {
+    for (let x = 0; x < w; x += spacing) {
+      const dx = x - cx, dy = y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const maxDist = Math.sqrt(cx*cx + cy*cy);
+      const t = fade ? 1 - dist / maxDist : 1;
+      if (t <= 0) continue;
+      const r = minR + (maxR - minR) * t;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
+}
+
+/* Hero halftone arc */
+const hc = document.getElementById('hero-halftone');
+drawHalftone(hc, { w:420, h:420, color:'rgba(168,212,240,0.28)', spacing:22, minR:1, maxR:9, fade:true });
+
+/* Card corner halftones */
+document.querySelectorAll('.pcard-corner').forEach(cv => {
+  drawHalftone(cv, {
+    w:80, h:80,
+    color: cv.dataset.color + '55',
+    spacing: 11, minR: 0.8, maxR: 5, fade: false
+  });
+});
+
+/* Strip halftone */
+(function() {
+  const strip = document.getElementById('strip1');
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  strip.style.position = 'relative';
+  strip.appendChild(cv);
+  const W = window.innerWidth, H = 80;
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  for (let x = 0; x < W; x += 18) {
+    for (let y = 0; y < H; y += 18) {
+      const t = x / W;
+      const r = 1 + 5 * Math.sin(t * Math.PI);
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(168,212,240,${0.15 + 0.25*Math.sin(t*Math.PI)})`;
+      ctx.fill();
+    }
+  }
+})();
+
+/* ══════════════════════════════════════
+   LOADER
+══════════════════════════════════════ */
+const loader = document.getElementById('loader');
+const lbar   = document.getElementById('lbar');
+setTimeout(() => lbar.style.width = '100%', 80);
+setTimeout(() => { loader.classList.add('hidden'); triggerReveal(); }, 1600);
+
+/* ══════════════════════════════════════
+   CURSOR
+══════════════════════════════════════ */
+const cur = document.getElementById('cursor');
+const crg = document.getElementById('cring');
+let mx=-200, my=-200, rx=-200, ry=-200;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+(function tick() {
+  cur.style.left=mx+'px'; cur.style.top=my+'px';
+  rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13;
+  crg.style.left=rx+'px'; crg.style.top=ry+'px';
+  requestAnimationFrame(tick);
+})();
+document.querySelectorAll('a,button,.pcard,.pcard-img,.btn-primary,.btn-ghost,.contact-link').forEach(el=>{
+  el.addEventListener('mouseenter', ()=>{
+    cur.style.width='18px'; cur.style.height='18px';
+    cur.style.background='var(--blue)';
+    crg.style.width='52px'; crg.style.height='52px';
+  });
+  el.addEventListener('mouseleave', ()=>{
+    cur.style.width='12px'; cur.style.height='12px';
+    cur.style.background='var(--blue-d)';
+    crg.style.width='34px'; crg.style.height='34px';
+  });
+});
+
+/* ══════════════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════════════ */
+function triggerReveal() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ══════════════════════════════════════
+   IMAGE UPLOAD
+══════════════════════════════════════ */
+function loadImg(input, previewId, containerId) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img   = document.getElementById(previewId);
+    const wrap  = document.getElementById(containerId);
+    img.src = e.target.result;
+    img.classList.add('loaded');
+    wrap.querySelector('.pcard-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>

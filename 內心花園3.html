@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>內心花園測驗</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #8aab8f;
+    --blush: #e8c4b0;
+    --cream: #faf6f0;
+    --dusk: #6b7fa3;
+    --bark: #5c4a3a;
+    --mist: #d4dfe8;
+    --gold: #c9a96e;
+    --text: #3a2e26;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--cream);
+    font-family: 'Noto Serif TC', serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(138,171,143,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(107,127,163,0.14) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(232,196,176,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .container {
+    position: relative; z-index: 1;
+    max-width: 680px; margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  /* SCREENS */
+  .screen { display: none; animation: fadeUp 0.7s ease forwards; }
+  .screen.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* INTRO */
+  .intro-ornament { text-align: center; margin-bottom: 32px; }
+  .petal-ring {
+    width: 90px; height: 90px; margin: 0 auto 20px;
+    animation: slowSpin 20s linear infinite;
+  }
+  @keyframes slowSpin { to { transform: rotate(360deg); } }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: 400; color: var(--bark);
+    text-align: center; line-height: 1.3; margin-bottom: 16px;
+  }
+  h1 em { font-style: italic; color: var(--sage); }
+  .subtitle {
+    text-align: center; font-size: 0.95rem; color: #7a6a5c;
+    line-height: 1.8; max-width: 440px; margin: 0 auto 48px; font-weight: 300;
+  }
+
+  /* DIVIDER */
+  .divider { display: flex; align-items: center; gap: 12px; margin: 32px 0; }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, transparent, var(--blush), transparent);
+  }
+  .divider-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+  /* BUTTON */
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--bark); color: var(--cream);
+    border: none; padding: 16px 40px; border-radius: 100px;
+    font-family: 'Noto Serif TC', serif; font-size: 1rem;
+    cursor: pointer; transition: all 0.3s ease; letter-spacing: 0.05em;
+  }
+  .btn:hover {
+    background: var(--sage); transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(138,171,143,0.35);
+  }
+  .btn-center { text-align: center; }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--mist); border-radius: 100px;
+    height: 4px; margin-bottom: 40px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage), var(--dusk));
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-label {
+    text-align: right; font-size: 0.78rem; color: #a0907e;
+    margin-bottom: 8px; letter-spacing: 0.08em;
+  }
+
+  /* QUESTION */
+  .q-number {
+    font-size: 0.72rem; letter-spacing: 0.2em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .q-text {
+    font-size: clamp(1.1rem, 3vw, 1.35rem); line-height: 1.7;
+    color: var(--bark); margin-bottom: 36px; font-weight: 300;
+  }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option {
+    position: relative;
+    border: 1.5px solid rgba(201,169,110,0.25); border-radius: 16px;
+    padding: 18px 22px 18px 56px; cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.55); backdrop-filter: blur(6px);
+  }
+  .option:hover {
+    border-color: var(--sage); background: rgba(138,171,143,0.08);
+    transform: translateX(4px);
+  }
+  .option.selected { border-color: var(--sage); background: rgba(138,171,143,0.12); }
+  .option::before {
+    content: attr(data-letter);
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid var(--blush);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--gold);
+    font-family: 'Playfair Display', serif; font-style: italic;
+    transition: all 0.3s;
+  }
+  .option.selected::before { background: var(--sage); border-color: var(--sage); color: white; }
+  .option-text { font-size: 0.95rem; line-height: 1.6; color: var(--text); font-weight: 300; }
+
+  /* ══════════════════════════════════════════
+     RESULT PAGE — redesigned reading flow
+  ══════════════════════════════════════════ */
+
+  /* Hero banner — SVG landscape full width */
+  .result-hero {
+    border-radius: 24px; overflow: hidden;
+    margin-bottom: 0;
+    box-shadow: 0 12px 40px rgba(92,74,58,0.12);
+    position: relative;
+  }
+  .result-hero svg { display: block; width: 100%; height: auto; }
+
+  /* Type badge overlaid on hero bottom */
+  .result-hero-caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 28px 28px 22px;
+    background: linear-gradient(to top, rgba(30,20,10,0.55) 0%, transparent 100%);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .result-tag {
+    display: inline-block; align-self: flex-start;
+    background: rgba(255,255,255,0.22); backdrop-filter: blur(8px);
+    color: rgba(255,255,255,0.92); font-size: 0.72rem;
+    padding: 4px 14px; border-radius: 100px; letter-spacing: 0.12em;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .result-type {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    color: #fff; font-weight: 400; line-height: 1.25;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  /* Soul intro — first-person narrative lead */
+  .result-soul {
+    padding: 32px 0 8px;
+    font-size: 1.05rem; line-height: 1.95; color: #4a3c30;
+    font-weight: 300; white-space: pre-line;
+  }
+
+  /* Affirmation — centred pull-quote */
+  .affirmation {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.08rem; font-style: italic;
+    color: var(--dusk); line-height: 1.75;
+    padding: 28px 20px;
+    margin: 8px 0;
+    border-top: 1px solid rgba(212,223,232,0.6);
+    border-bottom: 1px solid rgba(212,223,232,0.6);
+  }
+  .affirmation::before { content: '"'; font-size: 2rem; line-height: 0; vertical-align: -0.4em; color: var(--gold); margin-right: 4px; }
+  .affirmation::after  { content: '"'; font-size: 2rem; line-height: 0; vertical-align: -0.4em; color: var(--gold); margin-left: 4px; }
+
+  /* Two-column info cards */
+  .result-cards {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; margin: 24px 0;
+  }
+  @media (max-width: 480px) { .result-cards { grid-template-columns: 1fr; } }
+
+  .rcard {
+    background: rgba(255,255,255,0.65); border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 18px; padding: 22px 20px; backdrop-filter: blur(6px);
+  }
+  .rcard-full { grid-column: 1 / -1; }
+  .rcard h4 {
+    font-size: 0.68rem; letter-spacing: 0.2em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .rcard p { font-size: 0.92rem; line-height: 1.85; font-weight: 300; color: #4a3c30; }
+
+  /* Flower section */
+  .flower-section {
+    background: linear-gradient(135deg, rgba(138,171,143,0.08), rgba(212,223,232,0.12));
+    border: 1px solid rgba(138,171,143,0.25);
+    border-radius: 20px; padding: 28px 24px; margin: 8px 0;
+  }
+  .flower-section h4 {
+    font-size: 0.68rem; letter-spacing: 0.2em; color: var(--sage);
+    text-transform: uppercase; margin-bottom: 18px;
+  }
+  .flower-row {
+    display: flex; align-items: flex-start; gap: 18px; margin-bottom: 16px;
+  }
+  .flower-svg { flex-shrink: 0; width: 64px; height: 64px; }
+  .flower-name-block {}
+  .flower-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; color: var(--bark); margin-bottom: 3px;
+  }
+  .flower-latin { font-size: 0.73rem; font-style: italic; color: var(--sage); letter-spacing: 0.06em; }
+  .flower-desc { font-size: 0.92rem; line-height: 1.85; font-weight: 300; color: #4a3c30; }
+
+  @keyframes floatBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  #sparkle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+</style>
+</head>
+<body>
+<canvas id="sparkle-canvas"></canvas>
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="intro-ornament">
+      <svg class="petal-ring" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(138,171,143,0.5)" transform="rotate(0,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(232,196,176,0.5)" transform="rotate(45,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(107,127,163,0.4)" transform="rotate(90,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(201,169,110,0.4)" transform="rotate(135,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(138,171,143,0.5)" transform="rotate(180,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(232,196,176,0.5)" transform="rotate(225,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(107,127,163,0.4)" transform="rotate(270,45,45)"/>
+        <ellipse cx="45" cy="18" rx="8" ry="15" fill="rgba(201,169,110,0.4)" transform="rotate(315,45,45)"/>
+        <circle cx="45" cy="45" r="10" fill="rgba(255,255,255,0.8)" stroke="rgba(201,169,110,0.4)" stroke-width="1"/>
+        <circle cx="45" cy="45" r="4" fill="rgba(201,169,110,0.6)"/>
+      </svg>
+    </div>
+    <h1>你的內心<em>花園</em><br>長什麼樣子？</h1>
+    <p class="subtitle">每個人心裡都有一座花園。<br>透過這 15 道直覺題，讓我們輕輕探索<br>你此刻內心最真實的樣子。</p>
+    <div class="divider"><div class="divider-dot"></div></div>
+    <div class="btn-center">
+      <button class="btn" onclick="startQuiz()"><span>踏入花園</span><span>✦</span></button>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="screen-question">
+    <div class="progress-label" id="progress-label">第 1 題，共 15 題</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="q-number" id="q-number">Question 01</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options-wrap"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+
+    <!-- 1. Hero landscape illustration -->
+    <div class="result-hero">
+      <div id="r-landscape"></div>
+      <div class="result-hero-caption">
+        <span class="result-tag" id="r-tag"></span>
+        <div class="result-type" id="r-type"></div>
+      </div>
+    </div>
+
+    <!-- 2. Soul description — who you are -->
+    <p class="result-soul" id="r-desc"></p>
+
+    <!-- 3. Affirmation pull-quote -->
+    <div class="affirmation" id="r-affirmation"></div>
+
+    <!-- 4. Two info cards side by side -->
+    <div class="result-cards">
+      <div class="rcard">
+        <h4>此刻的你</h4>
+        <p id="r-now"></p>
+      </div>
+      <div class="rcard">
+        <h4>療癒建議</h4>
+        <p id="r-tip"></p>
+      </div>
+    </div>
+
+    <!-- 5. Flower recommendation -->
+    <div class="flower-section">
+      <h4>✦ 屬於你的花</h4>
+      <div class="flower-row">
+        <div class="flower-svg" id="r-flower-svg"></div>
+        <div class="flower-name-block">
+          <div class="flower-name" id="r-flower-name"></div>
+          <div class="flower-latin" id="r-flower-latin"></div>
+        </div>
+      </div>
+      <p class="flower-desc" id="r-flower-desc"></p>
+    </div>
+
+    <div class="divider"><div class="divider-dot"></div></div>
+    <div class="btn-center">
+      <button class="btn" onclick="restartQuiz()">重新探索 ✦</button>
+    </div>
+  </div>
+
+</div>
+<script>
+// ═══════════════════════════════════════════
+//  SVG LANDSCAPES  (drawn inline)
+// ═══════════════════════════════════════════
+const landscapes = {
+  a: `<svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ec"/>
+      <stop offset="100%" stop-color="#fff8f0"/>
+    </linearGradient>
+    <radialGradient id="sun-a" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd6b8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffd6b8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- sky -->
+  <rect width="680" height="320" fill="url(#sky-a)"/>
+  <!-- sun glow -->
+  <ellipse cx="540" cy="80" rx="90" ry="90" fill="url(#sun-a)"/>
+  <circle cx="540" cy="80" r="28" fill="#ffc9a0" opacity="0.8"/>
+  <!-- rolling hills -->
+  <ellipse cx="120" cy="310" rx="260" ry="120" fill="#c8dfc9"/>
+  <ellipse cx="400" cy="320" rx="320" ry="110" fill="#b5d4b8"/>
+  <ellipse cx="680" cy="300" rx="200" ry="100" fill="#c8dfc9"/>
+  <!-- ground -->
+  <rect x="0" y="240" width="680" height="80" fill="#a8c9a8"/>
+  <!-- rose bushes -->
+  <g transform="translate(80,210)">
+    <ellipse cx="0" cy="20" rx="28" ry="22" fill="#6a9e6e"/>
+    <circle cx="-10" cy="8" r="9" fill="#e87e8a"/>
+    <circle cx="10" cy="5" r="10" fill="#e87e8a"/>
+    <circle cx="0" cy="0" r="8" fill="#f4a0aa"/>
+    <circle cx="-10" cy="8" r="4" fill="#f9c0c8"/>
+    <circle cx="10" cy="5" r="4.5" fill="#f9c0c8"/>
+    <circle cx="0" cy="0" r="3.5" fill="#fddee0"/>
+  </g>
+  <g transform="translate(160,205)">
+    <ellipse cx="0" cy="20" rx="24" ry="20" fill="#6a9e6e"/>
+    <circle cx="-8" cy="6" r="8" fill="#d4607a"/>
+    <circle cx="9" cy="4" r="9" fill="#e87e8a"/>
+    <circle cx="1" cy="-2" r="7" fill="#f4a0aa"/>
+    <circle cx="-8" cy="6" r="3.5" fill="#f9c0c8"/>
+    <circle cx="9" cy="4" r="4" fill="#f9c0c8"/>
+  </g>
+  <g transform="translate(550,215)">
+    <ellipse cx="0" cy="20" rx="30" ry="22" fill="#5c9060"/>
+    <circle cx="-12" cy="8" r="10" fill="#e87e8a"/>
+    <circle cx="12" cy="6" r="11" fill="#d4607a"/>
+    <circle cx="0" cy="0" r="9" fill="#f4a0aa"/>
+    <circle cx="-12" cy="8" r="4.5" fill="#fddee0"/>
+    <circle cx="12" cy="6" r="5" fill="#fddee0"/>
+    <circle cx="0" cy="0" r="4" fill="#fff0f2"/>
+  </g>
+  <!-- winding path -->
+  <path d="M 300 320 Q 320 280 290 240 Q 270 210 300 190" stroke="#d4b896" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <!-- bench -->
+  <g transform="translate(300,218)">
+    <rect x="-20" y="0" width="40" height="5" rx="2" fill="#8b6545"/>
+    <rect x="-16" y="5" width="5" height="14" rx="2" fill="#7a5a38"/>
+    <rect x="11" y="5" width="5" height="14" rx="2" fill="#7a5a38"/>
+    <rect x="-20" y="-10" width="40" height="4" rx="2" fill="#8b6545"/>
+    <rect x="-20" y="-18" width="40" height="4" rx="2" fill="#8b6545"/>
+  </g>
+  <!-- butterflies -->
+  <g transform="translate(200,130)" opacity="0.85">
+    <ellipse cx="-8" cy="-4" rx="9" ry="6" fill="#f9c0c8" transform="rotate(-20)"/>
+    <ellipse cx="8" cy="-4" rx="9" ry="6" fill="#f9c0c8" transform="rotate(20)"/>
+    <ellipse cx="-5" cy="4" rx="6" ry="4" fill="#f4a0aa" transform="rotate(10)"/>
+    <ellipse cx="5" cy="4" rx="6" ry="4" fill="#f4a0aa" transform="rotate(-10)"/>
+    <ellipse cx="0" cy="0" rx="2" ry="5" fill="#5c4a3a"/>
+  </g>
+  <g transform="translate(440,100)" opacity="0.7">
+    <ellipse cx="-7" cy="-3" rx="8" ry="5" fill="#fce4ec" transform="rotate(-15)"/>
+    <ellipse cx="7" cy="-3" rx="8" ry="5" fill="#fce4ec" transform="rotate(15)"/>
+    <ellipse cx="-4" cy="3" rx="5" ry="3" fill="#f4a0aa" transform="rotate(8)"/>
+    <ellipse cx="4" cy="3" rx="5" ry="3" fill="#f4a0aa" transform="rotate(-8)"/>
+    <ellipse cx="0" cy="0" rx="1.5" ry="4" fill="#5c4a3a"/>
+  </g>
+  <!-- lavender stems -->
+  <g transform="translate(420,225)" opacity="0.9">
+    <line x1="0" y1="30" x2="-2" y2="0" stroke="#7a9e7e" stroke-width="2"/>
+    <ellipse cx="-2" cy="-5" rx="3" ry="8" fill="#9b84c4"/>
+    <line x1="12" y1="32" x2="10" y2="2" stroke="#7a9e7e" stroke-width="2"/>
+    <ellipse cx="10" cy="-3" rx="3" ry="8" fill="#b09ed4"/>
+    <line x1="24" y1="28" x2="22" y2="-2" stroke="#7a9e7e" stroke-width="2"/>
+    <ellipse cx="22" cy="-7" rx="3" ry="8" fill="#9b84c4"/>
+  </g>
+</svg>`,
+
+  b: `<svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4e8d8"/>
+      <stop offset="100%" stop-color="#eef4ee"/>
+    </linearGradient>
+    <radialGradient id="mist-b" cx="50%" cy="80%" r="60%">
+      <stop offset="0%" stop-color="#c8dfc9" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#c8dfc9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="680" height="320" fill="url(#sky-b)"/>
+  <ellipse cx="340" cy="320" rx="400" ry="120" fill="url(#mist-b)"/>
+  <!-- ground layers -->
+  <ellipse cx="150" cy="300" rx="280" ry="100" fill="#8ab892"/>
+  <ellipse cx="500" cy="310" rx="260" ry="90" fill="#7aaa82"/>
+  <rect x="0" y="240" width="680" height="80" fill="#6a9e72"/>
+  <!-- moss patches -->
+  <ellipse cx="80"  cy="255" rx="60" ry="18" fill="#5c8e64" opacity="0.7"/>
+  <ellipse cx="200" cy="262" rx="40" ry="12" fill="#4e7e58" opacity="0.6"/>
+  <ellipse cx="500" cy="258" rx="55" ry="16" fill="#5c8e64" opacity="0.7"/>
+  <ellipse cx="620" cy="265" rx="45" ry="14" fill="#4e7e58" opacity="0.6"/>
+  <!-- fern shapes -->
+  <g transform="translate(60,235)">
+    <path d="M0,0 Q-18,-20,-28,-10" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q-12,-24,-8,-36" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q-6,-26,4,-38" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q8,-22,18,-30" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q14,-16,22,-8" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <!-- leaflets -->
+    <ellipse cx="-16" cy="-15" rx="5" ry="3" fill="#5c9060" transform="rotate(-30,-16,-15)"/>
+    <ellipse cx="-8"  cy="-30" rx="5" ry="3" fill="#5c9060" transform="rotate(-10,-8,-30)"/>
+    <ellipse cx="3"   cy="-34" rx="5" ry="3" fill="#6aa06e" transform="rotate(10,3,-34)"/>
+    <ellipse cx="14"  cy="-25" rx="5" ry="3" fill="#5c9060" transform="rotate(30,14,-25)"/>
+    <ellipse cx="20"  cy="-12" rx="5" ry="3" fill="#5c9060" transform="rotate(45,20,-12)"/>
+  </g>
+  <g transform="translate(580,232) scale(-1,1)">
+    <path d="M0,0 Q-18,-20,-28,-10" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q-12,-24,-8,-36" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q-6,-26,4,-38" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q8,-22,18,-30" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <path d="M0,0 Q14,-16,22,-8" stroke="#4a7e52" stroke-width="2.5" fill="none"/>
+    <ellipse cx="-16" cy="-15" rx="5" ry="3" fill="#5c9060" transform="rotate(-30,-16,-15)"/>
+    <ellipse cx="-8"  cy="-30" rx="5" ry="3" fill="#5c9060"/>
+    <ellipse cx="3"   cy="-34" rx="5" ry="3" fill="#6aa06e"/>
+    <ellipse cx="14"  cy="-25" rx="5" ry="3" fill="#5c9060"/>
+    <ellipse cx="20"  cy="-12" rx="5" ry="3" fill="#5c9060"/>
+  </g>
+  <!-- small pond -->
+  <ellipse cx="340" cy="258" rx="80" ry="28" fill="#9bbfca" opacity="0.7"/>
+  <ellipse cx="340" cy="258" rx="80" ry="28" fill="none" stroke="#7aaaba" stroke-width="1.5" opacity="0.5"/>
+  <!-- lily pads -->
+  <ellipse cx="310" cy="260" rx="12" ry="8" fill="#5c8e64" opacity="0.8"/>
+  <ellipse cx="365" cy="255" rx="10" ry="7" fill="#4e7e58" opacity="0.8"/>
+  <!-- reflection shimmer -->
+  <line x1="300" y1="250" x2="380" y2="250" stroke="white" stroke-width="1" opacity="0.4"/>
+  <line x1="310" y1="256" x2="370" y2="256" stroke="white" stroke-width="0.8" opacity="0.3"/>
+  <!-- tall trees silhouette -->
+  <g opacity="0.5">
+    <rect x="150" y="100" width="10" height="140" rx="4" fill="#4a6e4e"/>
+    <ellipse cx="155" cy="100" rx="30" ry="50" fill="#3e6042"/>
+    <rect x="490" y="90" width="10" height="150" rx="4" fill="#4a6e4e"/>
+    <ellipse cx="495" cy="90" rx="35" ry="55" fill="#3e6042"/>
+    <rect x="240" y="120" width="8" height="120" rx="3" fill="#4a6e4e"/>
+    <ellipse cx="244" cy="120" rx="22" ry="40" fill="#3e6042"/>
+  </g>
+  <!-- mist band -->
+  <rect x="0" y="200" width="680" height="40" fill="white" opacity="0.18"/>
+</svg>`,
+
+  c: `<svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky-c" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#87ceeb"/>
+      <stop offset="60%" stop-color="#ffe0b2"/>
+      <stop offset="100%" stop-color="#fff8e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="680" height="320" fill="url(#sky-c)"/>
+  <!-- clouds -->
+  <g opacity="0.8">
+    <ellipse cx="120" cy="70" rx="55" ry="28" fill="white"/>
+    <ellipse cx="90"  cy="78" rx="35" ry="22" fill="white"/>
+    <ellipse cx="155" cy="78" rx="38" ry="22" fill="white"/>
+    <ellipse cx="500" cy="55" rx="45" ry="22" fill="white" opacity="0.9"/>
+    <ellipse cx="475" cy="62" rx="28" ry="18" fill="white" opacity="0.9"/>
+    <ellipse cx="530" cy="62" rx="30" ry="18" fill="white" opacity="0.9"/>
+  </g>
+  <!-- sunflower field ground -->
+  <rect x="0" y="220" width="680" height="100" fill="#c8a850"/>
+  <ellipse cx="340" cy="220" rx="400" ry="40" fill="#d4b460"/>
+  <!-- sunflower stems -->
+  <g id="sf">
+    <line x1="0" y1="60" x2="0" y2="0" stroke="#6a8c3c" stroke-width="4"/>
+    <!-- leaves -->
+    <ellipse cx="-12" cy="40" rx="14" ry="7" fill="#7aaa4a" transform="rotate(-30,-12,40)"/>
+    <ellipse cx="12"  cy="25" rx="14" ry="7" fill="#7aaa4a" transform="rotate(30,12,25)"/>
+    <!-- head -->
+    <circle cx="0" cy="0" r="18" fill="#e8a020"/>
+    <circle cx="0" cy="0" r="10" fill="#5c3a10"/>
+    <!-- petals -->
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-22" rx="5" ry="9" fill="#f4c030" transform="rotate(315)"/>
+  </g>
+  <use href="#sf" transform="translate(80,220)"/>
+  <use href="#sf" transform="translate(150,225) scale(0.85)"/>
+  <use href="#sf" transform="translate(220,218) scale(0.95)"/>
+  <use href="#sf" transform="translate(290,222) scale(1.05)"/>
+  <use href="#sf" transform="translate(360,215)"/>
+  <use href="#sf" transform="translate(430,222) scale(0.9)"/>
+  <use href="#sf" transform="translate(500,218) scale(1.0)"/>
+  <use href="#sf" transform="translate(570,225) scale(0.88)"/>
+  <use href="#sf" transform="translate(635,220) scale(0.92)"/>
+  <!-- second row smaller -->
+  <use href="#sf" transform="translate(110,250) scale(0.65)"/>
+  <use href="#sf" transform="translate(195,252) scale(0.6)"/>
+  <use href="#sf" transform="translate(310,248) scale(0.7)"/>
+  <use href="#sf" transform="translate(455,252) scale(0.62)"/>
+  <use href="#sf" transform="translate(600,249) scale(0.68)"/>
+</svg>`,
+
+  d: `<svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky-d" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1b2e"/>
+      <stop offset="50%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#2a4a70"/>
+    </linearGradient>
+    <radialGradient id="moon-d" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffde8"/>
+      <stop offset="70%" stop-color="#f5e6b0"/>
+      <stop offset="100%" stop-color="#e8d090" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="680" height="320" fill="url(#sky-d)"/>
+  <!-- moon glow -->
+  <circle cx="520" cy="70" r="70" fill="#f5e6b0" opacity="0.08"/>
+  <circle cx="520" cy="70" r="40" fill="#fffde8" opacity="0.15"/>
+  <circle cx="520" cy="70" r="26" fill="#fffde8" opacity="0.9"/>
+  <circle cx="514" cy="65" r="20" fill="#f5e6b0"/>
+  <!-- stars -->
+  <g fill="white">
+    <circle cx="60"  cy="30"  r="1.5" opacity="0.9"/>
+    <circle cx="130" cy="18"  r="1"   opacity="0.7"/>
+    <circle cx="200" cy="40"  r="1.8" opacity="0.95"/>
+    <circle cx="280" cy="22"  r="1.2" opacity="0.8"/>
+    <circle cx="350" cy="50"  r="1"   opacity="0.6"/>
+    <circle cx="410" cy="30"  r="1.5" opacity="0.85"/>
+    <circle cx="600" cy="20"  r="1.3" opacity="0.9"/>
+    <circle cx="640" cy="45"  r="1"   opacity="0.7"/>
+    <circle cx="100" cy="60"  r="1"   opacity="0.5"/>
+    <circle cx="170" cy="15"  r="0.8" opacity="0.6"/>
+    <circle cx="330" cy="35"  r="1.2" opacity="0.75"/>
+    <circle cx="470" cy="42"  r="1"   opacity="0.65"/>
+    <circle cx="550" cy="110" r="1.3" opacity="0.7"/>
+    <circle cx="30"  cy="55"  r="0.9" opacity="0.8"/>
+    <circle cx="660" cy="30"  r="1.1" opacity="0.7"/>
+  </g>
+  <!-- rolling dark hills -->
+  <ellipse cx="100"  cy="310" rx="280" ry="110" fill="#0d2214"/>
+  <ellipse cx="450"  cy="305" rx="320" ry="100" fill="#0a1e10"/>
+  <rect x="0" y="240" width="680" height="80" fill="#0a1e10"/>
+  <!-- night-blooming flowers (evening primrose style) -->
+  <g id="ep">
+    <line x1="0" y1="40" x2="0" y2="0" stroke="#2a4a2e" stroke-width="2.5"/>
+    <ellipse cx="-8" cy="25" rx="8" ry="5" fill="#2a5a30" transform="rotate(-25,-8,25)"/>
+    <ellipse cx="8"  cy="15" rx="8" ry="5" fill="#2a5a30" transform="rotate(25,8,15)"/>
+    <circle cx="0" cy="0" r="10" fill="#e8d070" opacity="0.9"/>
+    <circle cx="0" cy="0" r="5"  fill="#f5e090"/>
+    <ellipse cx="0" cy="-13" rx="5" ry="8" fill="#e8d070" opacity="0.85"/>
+    <ellipse cx="0" cy="-13" rx="5" ry="8" fill="#e8d070" opacity="0.85" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-13" rx="5" ry="8" fill="#e8d070" opacity="0.85" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-13" rx="5" ry="8" fill="#e8d070" opacity="0.85" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-13" rx="5" ry="8" fill="#e8d070" opacity="0.85" transform="rotate(288)"/>
+  </g>
+  <use href="#ep" transform="translate(100,240)"/>
+  <use href="#ep" transform="translate(180,245) scale(0.8)"/>
+  <use href="#ep" transform="translate(260,238) scale(1.1)"/>
+  <use href="#ep" transform="translate(380,242)"/>
+  <use href="#ep" transform="translate(480,240) scale(0.9)"/>
+  <use href="#ep" transform="translate(570,244) scale(0.85)"/>
+  <!-- stone lantern glow -->
+  <g transform="translate(320,220)">
+    <rect x="-8" y="-30" width="16" height="28" rx="3" fill="#2a3a28"/>
+    <rect x="-10" y="-34" width="20" height="6" rx="2" fill="#1e2e1e"/>
+    <polygon points="0,-50 -12,-34 12,-34" fill="#1e2e1e"/>
+    <rect x="-3" y="-28" width="6" height="24" rx="1" fill="#e8c840" opacity="0.7"/>
+    <ellipse cx="0" cy="-16" rx="18" ry="22" fill="#e8c840" opacity="0.08"/>
+  </g>
+  <!-- moonlight on water (thin line) -->
+  <line x1="460" y1="252" x2="580" y2="252" stroke="#fffde8" stroke-width="1.2" opacity="0.3"/>
+  <line x1="470" y1="258" x2="570" y2="258" stroke="#fffde8" stroke-width="0.8" opacity="0.2"/>
+</svg>`,
+
+  e: `<svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky-e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf6e8"/>
+      <stop offset="100%" stop-color="#fff8f0"/>
+    </linearGradient>
+    <radialGradient id="haze-e" cx="50%" cy="60%" r="55%">
+      <stop offset="0%" stop-color="#e8d4b0" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#e8d4b0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="680" height="320" fill="url(#sky-e)"/>
+  <ellipse cx="340" cy="250" rx="400" ry="100" fill="url(#haze-e)"/>
+  <!-- distant mountains layered -->
+  <ellipse cx="100"  cy="260" rx="200" ry="80" fill="#c8b890" opacity="0.4"/>
+  <ellipse cx="350"  cy="255" rx="280" ry="90" fill="#b8a880" opacity="0.5"/>
+  <ellipse cx="600"  cy="265" rx="200" ry="75" fill="#c8b890" opacity="0.4"/>
+  <rect x="0" y="250" width="680" height="70" fill="#a89870"/>
+  <!-- winding gravel path -->
+  <path d="M 340 320 Q 360 290 330 260 Q 300 230 340 200 Q 370 175 350 150" stroke="#d4c090" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 340 320 Q 360 290 330 260 Q 300 230 340 200 Q 370 175 350 150" stroke="#e8d8a8" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.45"/>
+  <!-- plum blossom tree left -->
+  <g transform="translate(130,180)">
+    <path d="M0,70 Q-5,40 -15,10" stroke="#6e5040" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-30,-10,-40,-5" stroke="#6e5040" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-18,-20,-10,-35" stroke="#6e5040" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-5,-25,10,-30" stroke="#6e5040" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q5,-15,20,-10" stroke="#6e5040" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <!-- blossoms -->
+    <g fill="#f4c0c8">
+      <circle cx="-38" cy="-5"  r="7"/><circle cx="-20" cy="-34" r="6"/><circle cx="8"  cy="-30" r="7"/>
+      <circle cx="18"  cy="-10" r="6"/><circle cx="-30" cy="-18" r="5"/><circle cx="-8" cy="-20" r="6"/>
+      <circle cx="-45" cy="2"   r="5"/><circle cx="26"  cy="-4"  r="5"/>
+    </g>
+    <g fill="#fff0f4" opacity="0.7">
+      <circle cx="-38" cy="-5"  r="3.5"/><circle cx="-20" cy="-34" r="3"/>
+      <circle cx="8"   cy="-30" r="3.5"/><circle cx="18"  cy="-10" r="3"/>
+    </g>
+    <!-- petals falling -->
+    <ellipse cx="-5"  cy="20" rx="3" ry="5" fill="#f4c0c8" opacity="0.6" transform="rotate(30,-5,20)"/>
+    <ellipse cx="15"  cy="35" rx="3" ry="5" fill="#f4c0c8" opacity="0.5" transform="rotate(-20,15,35)"/>
+    <ellipse cx="-20" cy="50" rx="2.5" ry="4" fill="#f4c0c8" opacity="0.55" transform="rotate(15,-20,50)"/>
+  </g>
+  <!-- plum blossom tree right -->
+  <g transform="translate(540,190) scale(-1,1)">
+    <path d="M0,70 Q-5,40 -15,10" stroke="#6e5040" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-30,-10,-40,-5" stroke="#6e5040" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-18,-20,-10,-35" stroke="#6e5040" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q-5,-25,10,-30" stroke="#6e5040" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M-15,10 Q5,-15,20,-10" stroke="#6e5040" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <g fill="#f4c0c8">
+      <circle cx="-38" cy="-5"  r="7"/><circle cx="-20" cy="-34" r="6"/><circle cx="8"  cy="-30" r="7"/>
+      <circle cx="18"  cy="-10" r="6"/><circle cx="-30" cy="-18" r="5"/><circle cx="-8" cy="-20" r="6"/>
+    </g>
+    <g fill="#fff0f4" opacity="0.7">
+      <circle cx="-38" cy="-5" r="3.5"/><circle cx="8" cy="-30" r="3.5"/>
+    </g>
+    <ellipse cx="-5"  cy="20" rx="3" ry="5" fill="#f4c0c8" opacity="0.6" transform="rotate(30,-5,20)"/>
+    <ellipse cx="10"  cy="38" rx="3" ry="5" fill="#f4c0c8" opacity="0.5" transform="rotate(-20,10,38)"/>
+  </g>
+  <!-- scattered petals on ground -->
+  <g fill="#f4c0c8" opacity="0.5">
+    <ellipse cx="220" cy="260" rx="4" ry="2.5" transform="rotate(20,220,260)"/>
+    <ellipse cx="270" cy="268" rx="3.5" ry="2" transform="rotate(-15,270,268)"/>
+    <ellipse cx="400" cy="263" rx="4" ry="2.5" transform="rotate(35,400,263)"/>
+    <ellipse cx="460" cy="270" rx="3" ry="2" transform="rotate(-10,460,270)"/>
+  </g>
+  <!-- small stone pagoda -->
+  <g transform="translate(340,200)">
+    <rect x="-12" y="-8" width="24" height="18" rx="2" fill="#9e8e78"/>
+    <rect x="-15" y="-12" width="30" height="6" rx="1" fill="#8e7e68"/>
+    <polygon points="0,-26 -18,-12 18,-12" fill="#7e6e58"/>
+    <rect x="-7"  y="-8"  width="14" height="12" rx="1" fill="#6e5e48"/>
+    <rect x="-14" y="-40" width="28" height="5" rx="1" fill="#8e7e68"/>
+    <polygon points="0,-52 -15,-40 15,-40" fill="#7e6e58"/>
+    <line x1="0" y1="-52" x2="0" y2="-62" stroke="#6e5e48" stroke-width="2"/>
+    <circle cx="0" cy="-64" r="3" fill="#c9a96e"/>
+  </g>
+</svg>`
+};
+
+// ═══════════════════════════════════════════
+//  FLOWER SVGs (small, for result card)
+// ═══════════════════════════════════════════
+const flowerSVGs = {
+  a: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="8" fill="#c8504a"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e06070"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e87080" transform="rotate(45,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e06070" transform="rotate(90,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e87080" transform="rotate(135,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e06070" transform="rotate(180,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e87080" transform="rotate(225,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e06070" transform="rotate(270,32,32)"/>
+    <ellipse cx="32" cy="14" rx="7" ry="12" fill="#e87080" transform="rotate(315,32,32)"/>
+    <circle cx="32" cy="32" r="7" fill="#f9d0c8"/>
+    <circle cx="32" cy="32" r="3" fill="#c8504a"/>
+  </svg>`,
+  b: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <line x1="32" y1="58" x2="32" y2="34" stroke="#5c8a60" stroke-width="3"/>
+    <ellipse cx="20" cy="48" rx="10" ry="5" fill="#6a9e68" transform="rotate(-20,20,48)"/>
+    <ellipse cx="44" cy="42" rx="10" ry="5" fill="#6a9e68" transform="rotate(20,44,42)"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="white" stroke="#d0d8b0" stroke-width="1"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="white" transform="rotate(60,32,32)"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="white" transform="rotate(120,32,32)"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="#f0f4e0" transform="rotate(180,32,32)"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="#f0f4e0" transform="rotate(240,32,32)"/>
+    <ellipse cx="32" cy="26" rx="6" ry="10" fill="white" transform="rotate(300,32,32)"/>
+    <circle cx="32" cy="32" r="7" fill="#f4e870"/>
+    <circle cx="32" cy="32" r="3" fill="#c8a830"/>
+  </svg>`,
+  c: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="9" fill="#3a2010"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(30,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020" transform="rotate(60,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(90,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020" transform="rotate(120,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(150,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020" transform="rotate(180,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(210,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020" transform="rotate(240,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(270,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#e8a020" transform="rotate(300,32,32)"/>
+    <ellipse cx="32" cy="12" rx="6" ry="11" fill="#f0b030" transform="rotate(330,32,32)"/>
+    <circle cx="32" cy="32" r="8" fill="#4a2818"/>
+  </svg>`,
+  d: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <line x1="32" y1="60" x2="32" y2="36" stroke="#4a6a3e" stroke-width="2.5"/>
+    <ellipse cx="20" cy="50" rx="9" ry="4.5" fill="#5a7a4a" transform="rotate(-25,20,50)"/>
+    <ellipse cx="44" cy="44" rx="9" ry="4.5" fill="#5a7a4a" transform="rotate(25,44,44)"/>
+    <ellipse cx="32" cy="25" rx="8" ry="12" fill="#e8d870" opacity="0.9"/>
+    <ellipse cx="32" cy="25" rx="8" ry="12" fill="#d4c850" opacity="0.8" transform="rotate(72,32,32)"/>
+    <ellipse cx="32" cy="25" rx="8" ry="12" fill="#e8d870" opacity="0.9" transform="rotate(144,32,32)"/>
+    <ellipse cx="32" cy="25" rx="8" ry="12" fill="#d4c850" opacity="0.8" transform="rotate(216,32,32)"/>
+    <ellipse cx="32" cy="25" rx="8" ry="12" fill="#e8d870" opacity="0.9" transform="rotate(288,32,32)"/>
+    <circle cx="32" cy="32" r="7" fill="#f4e870"/>
+    <circle cx="32" cy="32" r="3" fill="#d0b840"/>
+  </svg>`,
+  e: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <line x1="32" y1="60" x2="36" y2="36" stroke="#7e6050" stroke-width="3"/>
+    <path d="M36,36 Q22,28 18,20" stroke="#7e6050" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M36,36 Q40,24 46,18" stroke="#7e6050" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="18" cy="18" r="8" fill="#f4c0c8"/>
+    <circle cx="18" cy="18" r="4" fill="#fff0f4"/>
+    <circle cx="46" cy="16" r="7" fill="#f4c0c8"/>
+    <circle cx="46" cy="16" r="3.5" fill="#fff0f4"/>
+    <circle cx="28" cy="10" r="6" fill="#e8a0b0"/>
+    <circle cx="28" cy="10" r="3" fill="#fff0f4"/>
+    <!-- falling petals -->
+    <ellipse cx="44" cy="34" rx="3" ry="5" fill="#f4c0c8" opacity="0.7" transform="rotate(30,44,34)"/>
+    <ellipse cx="22" cy="38" rx="2.5" ry="4" fill="#f4c0c8" opacity="0.6" transform="rotate(-20,22,38)"/>
+  </svg>`
+};
+
+// ═══════════════════════════════════════════
+//  QUESTIONS  (15)
+// ═══════════════════════════════════════════
+const questions = [
+  {
+    text: "清晨醒來，你最先感受到的情緒是什麼？",
+    options: [
+      { text: "一種淡淡的期待，像薄霧中透出的光", score: { a:3,b:1,c:0,d:0,e:1 } },
+      { text: "有點沉重，需要多一點時間才能起身", score: { a:0,b:0,c:1,d:3,e:1 } },
+      { text: "平靜，像池水一樣，沒有什麼特別的漣漪", score: { a:1,b:3,c:0,d:0,e:2 } },
+      { text: "思緒已經開始轉動，腦中有好幾個念頭在跑", score: { a:0,b:0,c:2,d:2,e:3 } },
+    ]
+  },
+  {
+    text: "如果你的心情是一種天氣，今天比較像是……",
+    options: [
+      { text: "晴時多雲，偶爾有一陣微風", score: { a:2,b:3,c:0,d:0,e:2 } },
+      { text: "陰天，但雨還沒落下", score: { a:0,b:0,c:1,d:3,e:1 } },
+      { text: "午後雷陣雨，來得快去得也快", score: { a:0,b:1,c:3,d:0,e:0 } },
+      { text: "霧濛濛的清晨，視線有點模糊", score: { a:1,b:2,c:0,d:1,e:3 } },
+    ]
+  },
+  {
+    text: "在一個安靜的下午，你最想做的事是？",
+    options: [
+      { text: "泡一杯茶，什麼都不做，只是坐著", score: { a:1,b:3,c:0,d:0,e:2 } },
+      { text: "寫下一些想法，或者畫些什麼", score: { a:0,b:1,c:3,d:1,e:2 } },
+      { text: "和某個人說說話，感受連結", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "整理空間，讓周圍的一切井然有序", score: { a:0,b:1,c:0,d:2,e:3 } },
+    ]
+  },
+  {
+    text: "面對一個還沒解決的問題，你通常……",
+    options: [
+      { text: "先讓自己冷靜，等待答案自然浮現", score: { a:1,b:3,c:0,d:1,e:2 } },
+      { text: "反覆思考，在腦中模擬各種可能", score: { a:0,b:0,c:1,d:3,e:2 } },
+      { text: "找人傾訴，說出來就會舒服一些", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "試著採取行動，哪怕只是小小一步", score: { a:1,b:0,c:3,d:0,e:1 } },
+    ]
+  },
+  {
+    text: "你與「孤獨」的關係是……",
+    options: [
+      { text: "孤獨是休息，我喜歡和自己在一起", score: { a:0,b:3,c:0,d:1,e:2 } },
+      { text: "孤獨有時讓我感到空洞，需要轉移注意力", score: { a:2,b:0,c:3,d:0,e:0 } },
+      { text: "我既需要獨處，也需要連結，兩者都缺一不可", score: { a:3,b:1,c:0,d:0,e:1 } },
+      { text: "孤獨讓我思考，但偶爾也讓我迷失", score: { a:0,b:0,c:1,d:3,e:2 } },
+    ]
+  },
+  {
+    text: "看到一朵掉落的花瓣，你心裡浮現的是……",
+    options: [
+      { text: "它曾經美麗過，這樣就夠了", score: { a:2,b:3,c:0,d:0,e:3 } },
+      { text: "一種淡淡的惆悵，關於消逝這件事", score: { a:0,b:1,c:0,d:3,e:2 } },
+      { text: "好奇它從哪朵花來的，旁邊還有什麼", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "想把它撿起來，帶回家做個紀念", score: { a:0,b:0,c:3,d:1,e:1 } },
+    ]
+  },
+  {
+    text: "最近讓你感到安慰的，最可能是……",
+    options: [
+      { text: "一個人說了一句恰到好處的話", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "某個獨處的瞬間，感覺自己終於可以喘口氣", score: { a:0,b:3,c:0,d:1,e:2 } },
+      { text: "完成了一件一直拖著的事", score: { a:0,b:0,c:3,d:1,e:2 } },
+      { text: "一段音樂，或者窗外的景色", score: { a:1,b:2,c:1,d:2,e:3 } },
+    ]
+  },
+  {
+    text: "如果你的內心需要一句話，此刻你最想聽到的是……",
+    options: [
+      { text: "「你不是一個人，我在這裡。」", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "「你已經做得很好了，可以休息了。」", score: { a:1,b:3,c:0,d:1,e:2 } },
+      { text: "「你的感受是真實的，讓自己感受它。」", score: { a:0,b:0,c:2,d:3,e:1 } },
+      { text: "「前方還有很多美好的事在等你。」", score: { a:2,b:1,c:3,d:0,e:2 } },
+    ]
+  },
+  {
+    text: "當你感到壓力時，身體最先出現什麼反應？",
+    options: [
+      { text: "想找人說話或抱抱，需要肢體上的溫暖", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "想一個人靜靜待著，需要空間沉澱", score: { a:0,b:3,c:0,d:1,e:2 } },
+      { text: "情緒起伏變大，容易感到煩躁或難過", score: { a:0,b:0,c:3,d:2,e:0 } },
+      { text: "開始不停思考，腦袋停不下來", score: { a:0,b:1,c:1,d:3,e:1 } },
+    ]
+  },
+  {
+    text: "如果你的人生是一座花園，現在處於哪個季節？",
+    options: [
+      { text: "春天——萌芽中，充滿可能性", score: { a:3,b:0,c:2,d:0,e:1 } },
+      { text: "夏天——繁盛但也有點燥熱", score: { a:1,b:0,c:3,d:0,e:0 } },
+      { text: "秋天——豐收後，開始沉澱", score: { a:0,b:3,c:0,d:1,e:3 } },
+      { text: "冬天——安靜等待，蓄積能量", score: { a:0,b:2,c:0,d:3,e:2 } },
+    ]
+  },
+  {
+    text: "你對「改變」的態度比較接近哪一種？",
+    options: [
+      { text: "期待改變，喜歡新的可能性帶來的興奮感", score: { a:3,b:0,c:2,d:0,e:0 } },
+      { text: "謹慎面對，喜歡在熟悉中找到安全感", score: { a:0,b:3,c:0,d:1,e:2 } },
+      { text: "改變讓我不安，需要時間消化才能接受", score: { a:0,b:0,c:1,d:3,e:1 } },
+      { text: "說不準，取決於是什麼樣的改變", score: { a:1,b:2,c:2,d:0,e:3 } },
+    ]
+  },
+  {
+    text: "回想最近一次真正感到快樂，那是在做什麼？",
+    options: [
+      { text: "和喜歡的人在一起，笑聲不斷", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "一個人做喜歡的事，沉浸其中忘了時間", score: { a:0,b:3,c:1,d:0,e:1 } },
+      { text: "創作、表達，把內心的東西呈現出來", score: { a:0,b:1,c:3,d:0,e:2 } },
+      { text: "理解了某件事，腦中突然有什麼清晰了", score: { a:0,b:0,c:1,d:3,e:2 } },
+    ]
+  },
+  {
+    text: "你覺得自己最需要被理解的部分是……",
+    options: [
+      { text: "我其實比看起來更需要被愛", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "我的沉默不是冷漠，只是需要空間", score: { a:0,b:3,c:0,d:1,e:2 } },
+      { text: "我的情緒起伏來自我的敏感，不是脆弱", score: { a:0,b:0,c:3,d:1,e:0 } },
+      { text: "我的複雜想法背後，其實有一份純粹的渴望", score: { a:1,b:1,c:0,d:3,e:2 } },
+    ]
+  },
+  {
+    text: "夜深人靜時，你的腦海裡最常出現什麼？",
+    options: [
+      { text: "對某個人的思念或掛念", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "對自己今天言行的回顧與反思", score: { a:0,b:2,c:0,d:3,e:2 } },
+      { text: "說不清楚的情緒，像一片霧", score: { a:0,b:1,c:3,d:1,e:1 } },
+      { text: "過去某個時光，或未來的某個想像", score: { a:1,b:0,c:1,d:0,e:3 } },
+    ]
+  },
+  {
+    text: "如果你可以在花園裡放一個東西，你會選……",
+    options: [
+      { text: "一張長椅，讓兩個人可以並肩坐著", score: { a:3,b:0,c:1,d:0,e:0 } },
+      { text: "一個小水池，安靜地映照天空", score: { a:0,b:3,c:0,d:1,e:1 } },
+      { text: "一片彩色的花海，讓視覺充滿顏色", score: { a:1,b:0,c:3,d:0,e:0 } },
+      { text: "一棵老樹，見證四季更替", score: { a:0,b:1,c:0,d:2,e:3 } },
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════
+//  RESULTS  (5 types)
+// ═══════════════════════════════════════════
+const results = {
+  a: {
+    type: "盛開的薔薇花圃",
+    tag: "連結型 · 溫暖的給予者",
+    desc: "你的花園開滿了玫瑰與薰衣草，蜜蜂和蝴蝶總愛在這裡流連忘返。你天生具有溫暖的能量，能感受到他人的情緒，擅長給予支持、讓身邊的人感到被接納。你喜歡在關係裡找到生命的意義，在付出中感受自己的存在。",
+    now: "此刻，你或許正需要一個提醒：你也值得被好好照顧，不只是照顧別人。",
+    affirmation: "我的溫柔是力量，而非軟弱。在付出的同時，我也允許自己被接住。",
+    tip: "試著對一個人說真心話，而不只是聽對方說。或者給自己寫一封短信，就像寫給最好的朋友那樣，充滿善意。",
+    flowerName: "玫瑰 Rose",
+    flowerLatin: "Rosa × hybrida",
+    flowerDesc: "玫瑰不只代表愛，更象徵敞開的心與深厚的情感連結。它的刺提醒我們：真實的溫柔並不脆弱，有自己的邊界與力量。建議在家中擺放幾枝粉色或珊瑚玫瑰，讓它提醒你——你值得被溫柔對待，就像你對待他人一樣。"
+  },
+  b: {
+    type: "靜謐的苔蘚庭院",
+    tag: "內觀型 · 安靜的智慧者",
+    desc: "你的花園長滿了蕨類和青苔，在陽光照不到的角落也能找到美麗。你習慣獨處，在寧靜中充電，有一種他人不易察覺的深度。你不需要熱鬧，你的平靜本身就是一種力量，一種選擇。",
+    now: "此刻，你或許正在慢慢消化某些事情。允許自己不急著給出答案——有些事需要時間才能浮現。",
+    affirmation: "靜默不代表空洞，我的內心正在進行一些深沉而必要的工作。",
+    tip: "給自己一段不被打擾的時間——早晨的十分鐘，或睡前的散步都好。讓思緒自由漂流，不強迫它落地。",
+    flowerName: "鈴蘭 Lily of the Valley",
+    flowerLatin: "Convallaria majalis",
+    flowerDesc: "鈴蘭小巧、純粹、不張揚，卻有令人沉靜的清香。它喜歡生長在樹蔭下的角落，不爭奪陽光，卻在自己的節奏裡散放獨特的美麗。試著將白色小花擺放在書桌旁，讓它陪你進行那些安靜卻重要的內心工作。"
+  },
+  c: {
+    type: "繁盛的向日葵田",
+    tag: "感受型 · 豐富的情感旅人",
+    desc: "你的花園色彩豐富，季節更迭鮮明。你的情緒如同天氣，真實且立體，有強烈的高峰，也有深沉的谷底。你對美、對痛苦都極為敏銳，這份敏感讓你充滿創造力，也讓你有時感到疲憊。",
+    now: "此刻，你或許需要的不是答案，而是被完整地看見——先看見自己，再被他人看見。",
+    affirmation: "感受這麼多，是因為我活得很真實。我不需要縮小自己的情緒。",
+    tip: "試著把今天的情緒用顏色或形狀畫下來，不需要美觀，只要誠實。讓情緒有個出口，它就不再那麼沉重。",
+    flowerName: "大麗花 Dahlia",
+    flowerLatin: "Dahlia pinnata",
+    flowerDesc: "大麗花的花瓣層層疊疊，色彩從柔粉到深紅，豐富而複雜，就像你的情感世界一樣立體。它不怕被看見，用全部的自己盛開。選一束最讓你心動的顏色，放在你最常待的地方，提醒自己：豐富的感受是禮物，不是負擔。"
+  },
+  d: {
+    type: "月光下的夜間花園",
+    tag: "思索型 · 深潛的探索者",
+    desc: "你的花園在夜晚才完整綻放——月見草、夜來香，星光灑落其中。你習慣深思，對自己和世界都有複雜而細膩的觀察。你常常帶著問題入睡，也在思考中找到出路。",
+    now: "此刻，你或許正站在某個重要的轉折口，比自己以為的更接近答案了——有時候，靠近黑暗才能看清星星。",
+    affirmation: "迷途也是旅途的一部分。我的探索，正帶我走向更真實的自己。",
+    tip: "今晚，寫下三個還沒有答案的問題，然後把筆記本闔上。有些事不需要馬上解決，只需要被承認它存在。",
+    flowerName: "月見草 Evening Primrose",
+    flowerLatin: "Oenothera biennis",
+    flowerDesc: "月見草只在夜晚靜靜開放，帶著淡淡的幽香，不為白日的喧嘩而改變自己的節奏。它象徵深夜的思考與內在探索——那些只有在安靜中才能看見的真實。在書桌擺一小束乾燥的淡黃色花，讓它陪你在深夜的思緒中找到方向。"
+  },
+  e: {
+    type: "落花飄零的梅林小徑",
+    tag: "過渡型 · 靜觀的旅人",
+    desc: "你的花園在季節交替時最美——梅花在寒風中靜靜開放，落瓣鋪滿青石小徑。你有一種超然的眼光，能在事物的流逝中看見美，在變化裡找到從容。你不輕易被喧嘩打動，卻對細微的美格外敏感。",
+    now: "此刻，你或許正處於一個過渡的時刻——舊的尚未完全離去，新的還沒完全到來。這個間隙，本身就是一種珍貴的狀態。",
+    affirmation: "我能在流動中保持自己的重心，不抓取，也不逃離。",
+    tip: "找一個安靜的地方，觀察某樣正在變化的事物——一杯茶冷卻，窗外雲的移動。讓自己成為那份靜默的見證者。",
+    flowerName: "梅花 Plum Blossom",
+    flowerLatin: "Prunus mume",
+    flowerDesc: "梅花在眾花凋零的寒冬中獨自開放，不依賴溫暖才能綻放。它象徵在逆境中保持優雅，在無常中找到定靜。它的落花之美，提醒我們：美麗不需要永恆才有意義。試著在窗台放一枝梅枝或乾燥花，讓它成為你靜心的錨點。"
+  }
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let currentQ = 0;
+let scores = { a:0, b:0, c:0, d:0, e:0 };
+
+// ═══════════════════════════════════════════
+//  QUIZ LOGIC
+// ═══════════════════════════════════════════
+function startQuiz() {
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('progress-label').textContent = `第 ${currentQ+1} 題，共 ${questions.length} 題`;
+  document.getElementById('progress-fill').style.width = `${(currentQ/questions.length)*100}%`;
+  document.getElementById('q-number').textContent = `Question ${String(currentQ+1).padStart(2,'0')}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  const wrap = document.getElementById('options-wrap');
+  wrap.innerHTML = '';
+  ['A','B','C','D'].forEach((letter, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.setAttribute('data-letter', letter);
+    div.innerHTML = `<div class="option-text">${q.options[i].text}</div>`;
+    div.addEventListener('click', () => selectOption(i, div));
+    wrap.appendChild(div);
+  });
+}
+
+function selectOption(index, el) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const scoreObj = questions[currentQ].options[index].score;
+  for (const key in scoreObj) scores[key] += scoreObj[key];
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < questions.length) renderQuestion();
+    else showResult();
+  }, 420);
+}
+
+function showResult() {
+  document.getElementById('progress-fill').style.width = '100%';
+  const winner = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+  const r = results[winner];
+
+  document.getElementById('r-landscape').innerHTML = landscapes[winner];
+  document.getElementById('r-tag').textContent  = r.tag;
+  document.getElementById('r-type').textContent = r.type;
+  document.getElementById('r-desc').textContent = r.desc;
+  document.getElementById('r-affirmation').textContent = r.affirmation;
+  document.getElementById('r-now').textContent  = r.now;
+  document.getElementById('r-tip').textContent  = r.tip;
+  document.getElementById('r-flower-svg').innerHTML = flowerSVGs[winner];
+  document.getElementById('r-flower-name').textContent  = r.flowerName;
+  document.getElementById('r-flower-latin').textContent = r.flowerLatin;
+  document.getElementById('r-flower-desc').textContent  = r.flowerDesc;
+
+  showScreen('screen-result');
+  launchSparkles();
+}
+
+function restartQuiz() {
+  currentQ = 0;
+  scores = { a:0, b:0, c:0, d:0, e:0 };
+  showScreen('screen-intro');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+//  SPARKLES
+// ═══════════════════════════════════════════
+const canvas = document.getElementById('sparkle-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function launchSparkles() {
+  particles = [];
+  for (let i = 0; i < 70; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: Math.random() * -2 - 0.5,
+      r: Math.random() * 3 + 1,
+      alpha: 1,
+      color: ['#8aab8f','#c9a96e','#e8c4b0','#6b7fa3','#d4dfe8','#f4c0c8'][Math.floor(Math.random()*6)]
+    });
+  }
+  animateSparkles();
+}
+
+function animateSparkles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.alpha > 0.01);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.alpha -= 0.008;
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.restore();
+  });
+  if (particles.length > 0) requestAnimationFrame(animateSparkles);
+  else ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+</script>
+</body>
+</html>
