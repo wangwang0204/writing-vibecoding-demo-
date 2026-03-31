@@ -1,1 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLANET MATCH — 太陽系配對遊戲</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════
+   TOKENS
+══════════════════════════════════ */
+:root{
+  --void:#02030d;--deep:#070b1c;--nebula:#0e1535;--dust:#18213c;
+  --frost:#c8dff5;--silver:#7a9cc0;--dim:#3a5878;
+  --gold:#e8b84b;--gold2:#ffda85;
+  --sun:#ffb347;--mercury:#b5a09a;--venus:#e8c97a;
+  --earth:#4a9eff;--mars:#e06040;--jupiter:#c8a068;
+  --saturn:#d4b87a;--uranus:#7ae8e0;--neptune:#4060e8;
+  --green:#48d89a;--red:#e05860;--rose:#e07898;
+  --match-glow:rgba(72,216,154,.35);
+  --ff-px:'Press Start 2P',monospace;
+  --ff-t:'Cinzel',serif;
+  --ff-b:'Crimson Pro',serif;
+  --ff-ui:'Noto Sans TC',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--void);color:var(--frost);
+  font-family:var(--ff-ui);min-height:100vh;
+  overflow-x:hidden;cursor:none;
+  display:flex;flex-direction:column;align-items:center;
+}
 
+/* ── STAR CANVAS ── */
+#star-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+
+/* ── CURSOR ── */
+.cursor{position:fixed;z-index:9999;pointer-events:none;
+  width:8px;height:8px;border-radius:50%;background:var(--gold);
+  transform:translate(-50%,-50%);box-shadow:0 0 8px 2px rgba(232,184,75,.5);
+  transition:width .18s,height .18s,background .18s;}
+.cursor-ring{position:fixed;z-index:9998;pointer-events:none;
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(232,184,75,.35);transform:translate(-50%,-50%);
+  transition:width .18s,height .18s;}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);
+  padding:10px 24px;border-radius:8px;font-family:var(--ff-t);font-size:.75rem;letter-spacing:.1em;
+  z-index:600;transition:transform .38s cubic-bezier(.4,0,.2,1);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{background:rgba(72,216,154,.15);border:1px solid rgba(72,216,154,.4);color:var(--green);}
+.toast.bad{background:rgba(224,88,96,.15);border:1px solid rgba(224,88,96,.4);color:var(--red);}
+.toast.info{background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:var(--gold);}
+
+/* ══════════════════════════════════
+   LAYOUT
+══════════════════════════════════ */
+#app{
+  position:relative;z-index:1;
+  width:100%;max-width:900px;
+  padding:20px 16px 60px;
+}
+
+/* ── HEADER ── */
+.site-header{
+  text-align:center;padding:32px 0 20px;
+}
+.site-logo{
+  font-family:var(--ff-px);font-size:clamp(.55rem,2vw,.85rem);
+  letter-spacing:.1em;color:var(--frost);line-height:1.8;
+  text-shadow:2px 2px 0 rgba(200,223,245,.06);
+  margin-bottom:6px;
+}
+.site-logo span{color:var(--gold);
+  text-shadow:0 0 20px rgba(232,184,75,.5),2px 2px 0 rgba(232,184,75,.1);}
+.site-sub{font-family:var(--ff-b);font-style:italic;font-size:.88rem;
+  color:var(--silver);letter-spacing:.08em;}
+
+/* ── STATS BAR ── */
+.stats-bar{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  flex-wrap:wrap;margin:16px 0 20px;
+}
+.stat-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(200,223,245,.1);
+  border-radius:100px;padding:8px 18px;
+}
+.stat-label{font-family:var(--ff-ui);font-size:.62rem;letter-spacing:.12em;
+  color:var(--silver);text-transform:uppercase;}
+.stat-val{font-family:var(--ff-px);font-size:.55rem;color:var(--gold);
+  line-height:2;min-width:24px;text-align:right;}
+.stat-icon{font-size:.9rem;}
+
+/* timer colour changes */
+.stat-pill.timer-warn .stat-val{color:var(--gold);}
+.stat-pill.timer-danger .stat-val{color:var(--red);animation:blink .5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── DIFFICULTY SELECTOR ── */
+.diff-row{
+  display:flex;gap:8px;justify-content:center;margin-bottom:20px;
+}
+.diff-btn{
+  font-family:var(--ff-px);font-size:.45rem;letter-spacing:.08em;
+  background:rgba(255,255,255,.04);border:1px solid rgba(200,223,245,.12);
+  color:var(--silver);padding:8px 16px;border-radius:6px;cursor:none;
+  transition:all .22s;line-height:1.8;
+}
+.diff-btn:hover{color:var(--frost);border-color:rgba(200,223,245,.28);}
+.diff-btn.active{background:rgba(232,184,75,.12);border-color:rgba(232,184,75,.4);color:var(--gold);}
+
+/* ── NEW GAME BUTTON ── */
+.new-game-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--ff-px);font-size:.48rem;letter-spacing:.1em;
+  background:rgba(72,216,154,.1);border:1px solid rgba(72,216,154,.35);
+  color:var(--green);padding:11px 28px;border-radius:8px;
+  cursor:none;transition:all .25s;margin:0 auto 24px;line-height:1.8;
+}
+.new-game-btn:hover{background:rgba(72,216,154,.18);transform:translateY(-2px);}
+
+/* ══════════════════════════════════
+   CARD GRID
+══════════════════════════════════ */
+.grid-wrap{
+  perspective:1200px;
+  display:grid;
+  gap:10px;
+  margin:0 auto;
+  justify-items:center;
+}
+/* grid columns set by JS */
+
+/* ── CARD ── */
+.card{
+  width:100%;aspect-ratio:1;
+  cursor:none;position:relative;
+  transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1);
+  border-radius:14px;
+}
+.card.flipped{transform:rotateY(180deg);}
+.card.matched{transform:rotateY(180deg);}
+.card.matched .card-front{
+  box-shadow:0 0 0 2px var(--green),0 0 24px 4px var(--match-glow);
+  animation:matchPop .4s cubic-bezier(.4,0,.2,1);
+}
+@keyframes matchPop{
+  0%{transform:scale(1);}40%{transform:scale(1.12);}100%{transform:scale(1);}
+}
+.card.shake{animation:cardShake .4s ease;}
+@keyframes cardShake{
+  0%,100%{transform:rotateY(180deg) translateX(0);}
+  25%{transform:rotateY(180deg) translateX(-5px);}
+  75%{transform:rotateY(180deg) translateX(5px);}
+}
+
+/* CARD FACES */
+.card-back,.card-front{
+  position:absolute;inset:0;border-radius:14px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px;overflow:hidden;
+}
+
+/* BACK */
+.card-back{
+  background:var(--nebula);
+  border:1px solid rgba(200,223,245,.1);
+  transition:border-color .2s,background .2s;
+}
+.card-back:hover{border-color:rgba(200,223,245,.25);background:var(--dust);}
+.card-back-star{font-size:1.4rem;opacity:.5;animation:twinkleCard 3s ease-in-out infinite;}
+.card-back-dot{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(200,223,245,.1) 1px,transparent 1px);
+  background-size:16px 16px;
+}
+@keyframes twinkleCard{0%,100%{opacity:.3;}50%{opacity:.7;}}
+
+/* FRONT — base */
+.card-front{
+  transform:rotateY(180deg);
+  border:1px solid rgba(200,223,245,.15);
+}
+
+/* per-planet front colours */
+.cf-mercury{background:radial-gradient(135deg,#2a2025,#1a1520);border-color:rgba(181,160,154,.3);}
+.cf-venus  {background:radial-gradient(135deg,#2a2510,#1e1a0c);border-color:rgba(232,201,122,.3);}
+.cf-earth  {background:radial-gradient(135deg,#0a1830,#041020);border-color:rgba(74,158,255,.3);}
+.cf-mars   {background:radial-gradient(135deg,#2a1008,#1c0a04);border-color:rgba(224,96,64,.3);}
+.cf-jupiter{background:radial-gradient(135deg,#2a1e10,#1c1408);border-color:rgba(200,160,104,.3);}
+.cf-saturn {background:radial-gradient(135deg,#282010,#1c180a);border-color:rgba(212,184,122,.3);}
+.cf-uranus {background:radial-gradient(135deg,#081e20,#041415);border-color:rgba(122,232,224,.3);}
+.cf-neptune{background:radial-gradient(135deg,#080c30,#040820);border-color:rgba(64,96,232,.3);}
+
+/* planet globe on card */
+.card-globe{
+  border-radius:50%;flex-shrink:0;
+  position:relative;margin-bottom:6px;
+}
+/* Chinese type card */
+.card-zh .card-globe{width:44px;height:44px;}
+.card-zh .card-zh-name{
+  font-family:var(--ff-px);font-size:.38rem;color:var(--frost);
+  letter-spacing:.04em;text-align:center;line-height:1.9;
+  image-rendering:pixelated;
+}
+.card-zh .card-en-hint{
+  font-family:var(--ff-b);font-style:italic;font-size:.55rem;
+  color:rgba(200,223,245,.35);margin-top:2px;
+}
+/* English type card */
+.card-en .card-globe{width:38px;height:38px;}
+.card-en .card-en-name{
+  font-family:var(--ff-t);font-size:clamp(.55rem,1.5vw,.8rem);
+  letter-spacing:.1em;color:var(--frost);text-align:center;font-weight:700;
+  margin-bottom:2px;
+}
+.card-en .card-en-fact{
+  font-family:var(--ff-b);font-style:italic;
+  font-size:clamp(.5rem,1.2vw,.68rem);color:var(--silver);
+  text-align:center;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+/* globe styles per planet */
+.g-mercury{background:radial-gradient(circle at 35% 35%,#cfc0b8,var(--mercury),#7a6a64);box-shadow:0 0 14px rgba(181,160,154,.35);}
+.g-venus  {background:radial-gradient(circle at 35% 35%,#fff5c8,var(--venus),#b89040);box-shadow:0 0 14px rgba(232,201,122,.35);}
+.g-earth  {background:radial-gradient(circle at 35% 35%,#8ecfff,var(--earth),#1a50a0);box-shadow:0 0 14px rgba(74,158,255,.4);}
+.g-mars   {background:radial-gradient(circle at 35% 35%,#f09070,var(--mars),#903020);box-shadow:0 0 14px rgba(224,96,64,.35);}
+.g-jupiter{background:radial-gradient(circle at 35% 35%,#e8c090,var(--jupiter),#806030);box-shadow:0 0 14px rgba(200,160,104,.3);}
+.g-saturn {background:radial-gradient(circle at 35% 35%,#ece0b0,var(--saturn),#987840);box-shadow:0 0 14px rgba(212,184,122,.3);}
+.g-uranus {background:radial-gradient(circle at 35% 35%,#c0f8f4,var(--uranus),#40b0a8);box-shadow:0 0 14px rgba(122,232,224,.35);}
+.g-neptune{background:radial-gradient(circle at 35% 35%,#7090f8,var(--neptune),#203080);box-shadow:0 0 14px rgba(64,96,232,.35);}
+/* saturn ring */
+.g-saturn::after{content:'';position:absolute;top:50%;left:50%;width:140%;height:35%;
+  border-radius:50%;border:2.5px solid rgba(212,184,122,.5);
+  transform:translate(-50%,-50%) rotateX(75deg);}
+
+/* ══════════════════════════════════
+   PLANET FACT PANEL (bottom)
+══════════════════════════════════ */
+.fact-panel{
+  margin-top:20px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(200,223,245,.1);
+  border-radius:16px;padding:18px 22px;
+  min-height:80px;
+  display:flex;align-items:center;gap:16px;
+  transition:all .4s ease;
+}
+.fact-panel.hidden{opacity:0;pointer-events:none;}
+.fact-globe{width:48px;height:48px;border-radius:50%;flex-shrink:0;}
+.fact-body{}
+.fact-name{font-family:var(--ff-t);font-size:.9rem;letter-spacing:.12em;
+  color:var(--frost);margin-bottom:4px;font-weight:700;}
+.fact-en{font-family:var(--ff-b);font-style:italic;font-size:.75rem;
+  color:var(--silver);margin-bottom:6px;}
+.fact-text{font-family:var(--ff-b);font-size:.88rem;color:var(--silver);line-height:1.7;}
+
+/* ══════════════════════════════════
+   WIN MODAL
+══════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(2,3,13,.85);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;visibility:hidden;transition:all .4s ease;
+}
+.modal-overlay.show{opacity:1;visibility:visible;}
+.modal{
+  background:var(--deep);border:1px solid rgba(200,223,245,.15);
+  border-radius:24px;padding:40px 36px;max-width:480px;width:100%;
+  text-align:center;position:relative;overflow:hidden;
+  animation:modalPop .5s cubic-bezier(.4,0,.2,1);
+}
+@keyframes modalPop{from{transform:scale(.9) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.modal::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(72,216,154,.06),transparent 60%);
+  pointer-events:none;}
+.modal-trophy{font-size:3.5rem;display:block;margin-bottom:16px;
+  animation:trophySpin 1s cubic-bezier(.4,0,.2,1);}
+@keyframes trophySpin{from{transform:rotate(-15deg) scale(.5);}to{transform:rotate(0) scale(1);}}
+.modal-title{font-family:var(--ff-px);font-size:clamp(.65rem,2.5vw,.95rem);
+  color:var(--green);letter-spacing:.1em;margin-bottom:8px;line-height:1.8;
+  text-shadow:0 0 20px rgba(72,216,154,.5);}
+.modal-sub{font-family:var(--ff-b);font-style:italic;font-size:.95rem;
+  color:var(--silver);margin-bottom:24px;}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;}
+.res-box{background:rgba(255,255,255,.04);border:1px solid rgba(200,223,245,.1);
+  border-radius:12px;padding:14px 10px;text-align:center;}
+.res-val{font-family:var(--ff-px);font-size:.7rem;color:var(--gold);
+  line-height:2;image-rendering:pixelated;}
+.res-lbl{font-size:.62rem;letter-spacing:.12em;color:var(--silver);text-transform:uppercase;margin-top:2px;}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.mbtn{display:inline-flex;align-items:center;gap:7px;
+  padding:12px 22px;border-radius:8px;font-family:var(--ff-t);
+  font-size:.75rem;letter-spacing:.12em;cursor:none;transition:all .22s;}
+.mbtn-play{background:rgba(72,216,154,.1);border:1px solid rgba(72,216,154,.35);color:var(--green);}
+.mbtn-play:hover{background:rgba(72,216,154,.2);}
+.mbtn-share-ig{background:linear-gradient(135deg,rgba(225,48,108,.15),rgba(131,58,180,.1));border:1px solid rgba(225,48,108,.3);color:#e1306c;}
+.mbtn-share-ig:hover{background:linear-gradient(135deg,rgba(225,48,108,.25),rgba(131,58,180,.2));transform:translateY(-2px);}
+.mbtn-share-x{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--frost);}
+.mbtn-share-x:hover{background:rgba(255,255,255,.12);transform:translateY(-2px);}
+.share-hint{font-family:var(--ff-ui);font-size:.65rem;letter-spacing:.12em;
+  color:var(--dim);text-transform:uppercase;}
+
+/* ══════════════════════════════════
+   CONFETTI CANVAS
+══════════════════════════════════ */
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:700;}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:9990;background:var(--void);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .6s,visibility .6s;}
+#loader.hidden{opacity:0;visibility:hidden;}
+.ld-ring{width:52px;height:52px;border-radius:50%;
+  border:1px solid rgba(200,223,245,.1);border-top-color:var(--gold);
+  animation:spin 1.4s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ld-text{font-family:var(--ff-px);font-size:.5rem;letter-spacing:.2em;color:var(--silver);}
+</style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cring"></div>
+<div id="loader"><div class="ld-ring"></div><div class="ld-text">LOADING...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- WIN MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <span class="modal-trophy">🏆</span>
+    <div class="modal-title">MISSION COMPLETE!</div>
+    <div class="modal-sub" id="modal-sub">你完成了太陽系配對挑戰！</div>
+    <div class="result-grid">
+      <div class="res-box"><div class="res-val" id="res-time">0</div><div class="res-lbl">秒完成</div></div>
+      <div class="res-box"><div class="res-val" id="res-moves">0</div><div class="res-lbl">翻牌次數</div></div>
+      <div class="res-box"><div class="res-val" id="res-score">0</div><div class="res-lbl">最終評分</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-play" onclick="newGame()">↺ 再玩一次</button>
+      <a class="mbtn mbtn-share-ig" href="#" onclick="shareIG();return false;">📸 Instagram</a>
+      <a class="mbtn mbtn-share-x" id="share-x-link" href="#" target="_blank" rel="noopener">𝕏 Twitter / X</a>
+    </div>
+    <div class="share-hint">IG：自動複製文字 · X：直接開啟發文</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="site-logo">PLANET <span>MATCH</span></div>
+    <div class="site-sub">太陽系配對挑戰 · Learn the Solar System</div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <span class="stat-icon">⏱</span>
+      <span class="stat-label">時間</span>
+      <span class="stat-val" id="stat-time">00</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">🔄</span>
+      <span class="stat-label">翻牌</span>
+      <span class="stat-val" id="stat-moves">0</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">✓</span>
+      <span class="stat-label">配對</span>
+      <span class="stat-val" id="stat-pairs">0/8</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-icon">⭐</span>
+      <span class="stat-label">評分</span>
+      <span class="stat-val" id="stat-score">—</span>
+    </div>
+  </div>
+
+  <!-- NEW GAME -->
+  <button class="new-game-btn" onclick="newGame()">✦ NEW GAME</button>
+
+  <!-- CARD GRID -->
+  <div class="grid-wrap" id="grid"></div>
+
+  <!-- FACT PANEL -->
+  <div class="fact-panel hidden" id="fact-panel">
+    <div class="fact-globe" id="fact-globe"></div>
+    <div class="fact-body">
+      <div class="fact-name" id="fact-name"></div>
+      <div class="fact-en" id="fact-en"></div>
+      <div class="fact-text" id="fact-text"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════
+   STAR FIELD
+══════════════════════════════════ */
+const sc=document.getElementById('star-canvas'),sx=sc.getContext('2d');
+let SW,SH;
+function rsz(){SW=sc.width=window.innerWidth;SH=sc.height=window.innerHeight;}
+rsz();window.addEventListener('resize',rsz);
+const STARS=260,stars=[];
+function mkS(){stars.length=0;for(let i=0;i<STARS;i++){const t=Math.random();stars.push({x:Math.random()*SW,y:Math.random()*SH,r:Math.random()*1.2+.2,col:t<.08?`rgba(232,184,75,${(Math.random()*.5+.4).toFixed(2)})`:t<.14?`rgba(72,216,154,${(Math.random()*.4+.3).toFixed(2)})`: `rgba(200,223,245,${(Math.random()*.45+.2).toFixed(2)})`,ts:Math.random()*.025+.005,to:Math.random()*Math.PI*2,isCross:Math.random()<.07,cs:Math.random()*3.5+2});}}
+mkS();window.addEventListener('resize',()=>{rsz();mkS();});
+const shoots=[];setInterval(()=>shoots.push({x:Math.random()*SW*.7+SW*.05,y:Math.random()*SH*.35,len:Math.random()*90+40,spd:Math.random()*6+4,ang:Math.PI/4+Math.random()*.35-.17,alpha:1}),5000);
+let af=0;
+function drawS(){sx.clearRect(0,0,SW,SH);af++;for(let i=shoots.length-1;i>=0;i--){const s=shoots[i];s.x+=Math.cos(s.ang)*s.spd;s.y+=Math.sin(s.ang)*s.spd;s.alpha-=.02;if(s.alpha<=0){shoots.splice(i,1);continue;}const g=sx.createLinearGradient(s.x-Math.cos(s.ang)*s.len,s.y-Math.sin(s.ang)*s.len,s.x,s.y);g.addColorStop(0,'rgba(200,223,245,0)');g.addColorStop(1,`rgba(200,223,245,${s.alpha})`);sx.save();sx.strokeStyle=g;sx.lineWidth=1.1;sx.beginPath();sx.moveTo(s.x-Math.cos(s.ang)*s.len,s.y-Math.sin(s.ang)*s.len);sx.lineTo(s.x,s.y);sx.stroke();sx.restore();}for(const s of stars){const a=.32+.68*Math.sin(af*s.ts+s.to);sx.save();sx.globalAlpha=a;if(s.isCross){sx.strokeStyle=s.col;sx.lineWidth=.8;sx.beginPath();sx.moveTo(s.x-s.cs,s.y);sx.lineTo(s.x+s.cs,s.y);sx.moveTo(s.x,s.y-s.cs);sx.lineTo(s.x,s.y+s.cs);const d=s.cs*.44;sx.moveTo(s.x-d,s.y-d);sx.lineTo(s.x+d,s.y+d);sx.moveTo(s.x+d,s.y-d);sx.lineTo(s.x-d,s.y+d);sx.stroke();sx.fillStyle=s.col;sx.beginPath();sx.arc(s.x,s.y,.9,0,Math.PI*2);sx.fill();}else{sx.fillStyle=s.col;sx.beginPath();sx.arc(s.x,s.y,s.r,0,Math.PI*2);sx.fill();}sx.restore();}requestAnimationFrame(drawS);}
+drawS();
+
+/* ══════════════════════════════════
+   CURSOR
+══════════════════════════════════ */
+const cur=document.getElementById('cursor'),crg=document.getElementById('cring');
+let mx=-200,my=-200,rx=-200,ry=-200;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function tick(){cur.style.left=mx+'px';cur.style.top=my+'px';rx+=(mx-rx)*.12;ry+=(my-ry)*.12;crg.style.left=rx+'px';crg.style.top=ry+'px';requestAnimationFrame(tick);})();
+function curH(on){cur.style.width=on?'14px':'8px';cur.style.height=on?'14px':'8px';crg.style.width=on?'44px':'28px';crg.style.height=on?'44px':'28px';cur.style.background=on?'var(--green)':'var(--gold)';}
+
+/* ══════════════════════════════════
+   PLANET DATA
+══════════════════════════════════ */
+const PLANETS=[
+  {
+    id:'mercury',zh:'水星',en:'Mercury',
+    globeClass:'g-mercury',frontClass:'cf-mercury',
+    fact:'Mercury is the smallest planet and closest to the Sun. A year on Mercury lasts only 88 Earth days, but a day lasts 59 Earth days.',
+    factZh:'水星是太陽系最小且最靠近太陽的行星。水星上的一年只有 88 個地球日，但一天長達 59 個地球日。'
+  },
+  {
+    id:'venus',zh:'金星',en:'Venus',
+    globeClass:'g-venus',frontClass:'cf-venus',
+    fact:'Venus is the hottest planet at 465°C, even hotter than Mercury. Its thick atmosphere traps heat in a runaway greenhouse effect.',
+    factZh:'金星是太陽系最熱的行星，表面溫度高達 465°C，甚至比距太陽更近的水星還熱，原因是濃密大氣層造成的強烈溫室效應。'
+  },
+  {
+    id:'earth',zh:'地球',en:'Earth',
+    globeClass:'g-earth',frontClass:'cf-earth',
+    fact:'Earth is the only known planet with life. It is 71% covered in water and has one natural satellite — the Moon.',
+    factZh:'地球是目前已知唯一存在生命的行星。地表 71% 被水覆蓋，並擁有一顆天然衛星——月球。'
+  },
+  {
+    id:'mars',zh:'火星',en:'Mars',
+    globeClass:'g-mars',frontClass:'cf-mars',
+    fact:'Mars is called the Red Planet because of iron oxide on its surface. It has the tallest volcano in the solar system — Olympus Mons.',
+    factZh:'火星因表面的氧化鐵而呈現紅色，被稱為紅色星球。它擁有太陽系最高的火山——奧林帕斯山，高達 21 公里。'
+  },
+  {
+    id:'jupiter',zh:'木星',en:'Jupiter',
+    globeClass:'g-jupiter',frontClass:'cf-jupiter',
+    fact:'Jupiter is the largest planet — 1,300 Earths could fit inside it. Its Great Red Spot is a storm that has lasted over 350 years.',
+    factZh:'木星是太陽系最大的行星，體積可容納約 1,300 個地球。它的大紅斑是一場持續超過 350 年的超級風暴。'
+  },
+  {
+    id:'saturn',zh:'土星',en:'Saturn',
+    globeClass:'g-saturn',frontClass:'cf-saturn',
+    fact:'Saturn\'s iconic rings are made of ice and rock particles. Saturn is so light it could float on water if there were an ocean large enough.',
+    factZh:'土星以其美麗的光環聞名，光環由冰塊和岩石碎片組成。土星密度極低，如果有足夠大的海洋，它甚至可以漂浮在水面上。'
+  },
+  {
+    id:'uranus',zh:'天王星',en:'Uranus',
+    globeClass:'g-uranus',frontClass:'cf-uranus',
+    fact:'Uranus rotates on its side with an axial tilt of 98°. It appears blue-green due to methane gas in its atmosphere.',
+    factZh:'天王星的自轉軸傾斜高達 98°，幾乎是側躺著自轉。大氣中的甲烷氣體使它呈現獨特的藍綠色。'
+  },
+  {
+    id:'neptune',zh:'海王星',en:'Neptune',
+    globeClass:'g-neptune',frontClass:'cf-neptune',
+    fact:'Neptune has the fastest winds in the solar system, reaching 2,100 km/h. It takes 165 Earth years to orbit the Sun once.',
+    factZh:'海王星是太陽系風速最快的行星，風速可達 2,100 公里/小時。它繞太陽公轉一圈需要 165 個地球年。'
+  }
+];
+
+/* ══════════════════════════════════
+   GAME STATE
+══════════════════════════════════ */
+let cards=[], flipped=[], matched=[], moves=0, seconds=0, timerID=null, gameActive=false;
+const TOTAL_PAIRS=8;
+
+/* ══════════════════════════════════
+   BUILD CARDS
+══════════════════════════════════ */
+function buildDeck(){
+  const deck=[];
+  PLANETS.forEach(p=>{
+    // Card A: Chinese name side
+    deck.push({uid:Math.random(),pairId:p.id,type:'zh',planet:p});
+    // Card B: English name side
+    deck.push({uid:Math.random(),pairId:p.id,type:'en',planet:p});
+  });
+  return shuffle(deck);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ══════════════════════════════════
+   RENDER GRID
+══════════════════════════════════ */
+function renderGrid(deck){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  // 4×4 grid — responsive card size
+  const cols=4;
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const appW=document.getElementById('app').offsetWidth-32;
+  const cardSz=Math.min(Math.floor((appW-(cols-1)*10)/cols),160);
+  grid.style.width=appW+'px';
+
+  deck.forEach((c,idx)=>{
+    const p=c.planet;
+    const el=document.createElement('div');
+    el.className='card';
+    el.style.width=cardSz+'px';
+    el.dataset.idx=idx;
+    el.addEventListener('click',()=>flipCard(idx));
+    el.addEventListener('mouseenter',()=>curH(true));
+    el.addEventListener('mouseleave',()=>curH(false));
+
+    // BACK
+    const back=document.createElement('div');
+    back.className='card-back';
+    back.innerHTML=`<div class="card-back-dot"></div><span class="card-back-star">✦</span>`;
+
+    // FRONT
+    const front=document.createElement('div');
+    front.className=`card-front ${p.frontClass}`;
+
+    if(c.type==='zh'){
+      front.classList.add('card-zh');
+      front.innerHTML=`
+        <div class="card-globe ${p.globeClass}"></div>
+        <div class="card-zh-name">${p.zh}</div>
+        <div class="card-en-hint">${p.en}</div>`;
+    } else {
+      front.classList.add('card-en');
+      front.innerHTML=`
+        <div class="card-globe ${p.globeClass}"></div>
+        <div class="card-en-name">${p.en}</div>
+        <div class="card-en-fact">${p.fact}</div>`;
+    }
+
+    el.appendChild(back);
+    el.appendChild(front);
+    grid.appendChild(el);
+  });
+}
+
+/* ══════════════════════════════════
+   GAME LOGIC
+══════════════════════════════════ */
+function newGame(){
+  clearInterval(timerID);
+  cards=buildDeck();
+  flipped=[];matched=[];moves=0;seconds=0;gameActive=false;
+  updateStats();
+  renderGrid(cards);
+  hideFact();
+  document.getElementById('modal').classList.remove('show');
+  // start timer on first flip
+}
+
+function flipCard(idx){
+  if(!gameActive){gameActive=true;startTimer();}
+  if(flipped.length>=2)return;
+  if(flipped.includes(idx))return;
+  if(matched.includes(cards[idx].pairId))return;
+
+  const el=cardEl(idx);
+  el.classList.add('flipped');
+  flipped.push(idx);
+  moves++;
+  updateStats();
+
+  if(flipped.length===2){
+    const [a,b]=flipped;
+    const pa=cards[a],pb=cards[b];
+    if(pa.pairId===pb.pairId && pa.type!==pb.type){
+      // MATCH!
+      setTimeout(()=>{
+        matched.push(pa.pairId);
+        cardEl(a).classList.add('matched');
+        cardEl(b).classList.add('matched');
+        flipped=[];
+        showFact(pa.planet);
+        showToast(`✦ ${pa.planet.zh} = ${pa.planet.en}!`,'ok');
+        updateStats();
+        if(matched.length===TOTAL_PAIRS) setTimeout(winGame,600);
+      },400);
+    } else {
+      // NO MATCH
+      setTimeout(()=>{
+        cardEl(a).classList.add('shake');
+        cardEl(b).classList.add('shake');
+        setTimeout(()=>{
+          cardEl(a).classList.remove('flipped','shake');
+          cardEl(b).classList.remove('flipped','shake');
+          flipped=[];
+        },500);
+      },700);
+    }
+  }
+}
+
+function cardEl(idx){return document.querySelector(`.card[data-idx="${idx}"]`);}
+
+/* ══════════════════════════════════
+   TIMER
+══════════════════════════════════ */
+function startTimer(){
+  timerID=setInterval(()=>{
+    seconds++;
+    const el=document.getElementById('stat-time');
+    el.textContent=String(seconds).padStart(2,'0');
+    const pill=el.closest('.stat-pill');
+    if(seconds>120){pill.className='stat-pill timer-danger';}
+    else if(seconds>60){pill.className='stat-pill timer-warn';}
+    else{pill.className='stat-pill';}
+  },1000);
+}
+
+/* ══════════════════════════════════
+   STATS
+══════════════════════════════════ */
+function updateStats(){
+  document.getElementById('stat-time').textContent=String(seconds).padStart(2,'0');
+  document.getElementById('stat-moves').textContent=moves;
+  document.getElementById('stat-pairs').textContent=`${matched.length}/8`;
+  // live score: based on matches & moves
+  if(matched.length>0){
+    const score=calcScore();
+    document.getElementById('stat-score').textContent=score;
+  }
+}
+function calcScore(){
+  const base=matched.length*100;
+  const timePenalty=Math.floor(seconds/5)*2;
+  const movePenalty=Math.max(0,(moves-matched.length*2)*3);
+  return Math.max(0,base-timePenalty-movePenalty);
+}
+
+/* ══════════════════════════════════
+   FACT PANEL
+══════════════════════════════════ */
+function showFact(planet){
+  const fp=document.getElementById('fact-panel');
+  fp.classList.remove('hidden');
+  document.getElementById('fact-globe').className='fact-globe '+planet.globeClass;
+  document.getElementById('fact-name').textContent=planet.zh;
+  document.getElementById('fact-en').textContent=planet.en;
+  document.getElementById('fact-text').textContent=planet.factZh;
+}
+function hideFact(){
+  document.getElementById('fact-panel').classList.add('hidden');
+}
+
+/* ══════════════════════════════════
+   WIN
+══════════════════════════════════ */
+function winGame(){
+  clearInterval(timerID);
+  gameActive=false;
+  const score=calcScore();
+  document.getElementById('res-time').textContent=seconds;
+  document.getElementById('res-moves').textContent=moves;
+  document.getElementById('res-score').textContent=score;
+  // rating
+  let rating='';
+  if(score>=700)rating='S — 太空傳奇！';
+  else if(score>=500)rating='A — 星際探險家';
+  else if(score>=300)rating='B — 宇宙觀察者';
+  else rating='C — 繼續加油！';
+  document.getElementById('modal-sub').textContent=`評級：${rating}`;
+  // share links
+  const txt=encodeURIComponent(`🪐 Planet Match 太陽系配對挑戰\n\n完成時間：${seconds} 秒 ⏱\n翻牌次數：${moves} 次 🔄\n最終評分：${score} ⭐\n評級：${rating}\n\n你也來挑戰太陽系知識！ #PlanetMatch #太陽系 #SolarSystem`);
+  document.getElementById('share-x-link').href=`https://twitter.com/intent/tweet?text=${txt}`;
+  // save for IG
+  window._shareScore={score,seconds,moves,rating};
+  document.getElementById('modal').classList.add('show');
+  launchConfetti();
+}
+
+/* ══════════════════════════════════
+   SHARE IG
+══════════════════════════════════ */
+function shareIG(){
+  const s=window._shareScore||{score:0,seconds:0,moves:0,rating:'—'};
+  const txt=`🪐 Planet Match 太陽系配對挑戰！\n\n⏱ 完成時間：${s.seconds} 秒\n🔄 翻牌次數：${s.moves} 次\n⭐ 最終評分：${s.score}\n🏆 評級：${s.rating}\n\n8 顆行星全配對！你知道它們的英文名字嗎？\n一起來挑戰！\n\n#PlanetMatch #太陽系 #SolarSystem #宇宙知識`;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('✦ 已複製！貼到 IG 限動/貼文吧','info'))
+      .catch(()=>fbCopy(txt));
+  } else fbCopy(txt);
+}
+function fbCopy(t){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast('✦ 已複製！','info');}catch{showToast('請手動複製','bad');}document.body.removeChild(ta);}
+
+/* ══════════════════════════════════
+   CONFETTI
+══════════════════════════════════ */
+const cc=document.getElementById('confetti-canvas'),cx=cc.getContext('2d');
+cc.width=window.innerWidth;cc.height=window.innerHeight;
+window.addEventListener('resize',()=>{cc.width=window.innerWidth;cc.height=window.innerHeight;});
+let confettiParts=[];
+function launchConfetti(){
+  confettiParts=[];
+  const colors=['#e8b84b','#48d89a','#7ae8e0','#e07898','#c8dff5','#ffb347'];
+  for(let i=0;i<120;i++){
+    confettiParts.push({
+      x:Math.random()*cc.width,y:-10,
+      vx:(Math.random()-0.5)*4,vy:Math.random()*4+2,
+      w:Math.random()*10+4,h:Math.random()*5+3,
+      rot:Math.random()*360,vr:(Math.random()-0.5)*6,
+      col:colors[Math.floor(Math.random()*colors.length)],
+      alpha:1
+    });
+  }
+  animConfetti();
+}
+function animConfetti(){
+  cx.clearRect(0,0,cc.width,cc.height);
+  confettiParts=confettiParts.filter(p=>p.alpha>0.01);
+  confettiParts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.rot+=p.vr;
+    if(p.y>cc.height+10)p.alpha-=0.04;
+    cx.save();cx.globalAlpha=p.alpha;
+    cx.translate(p.x,p.y);cx.rotate(p.rot*Math.PI/180);
+    cx.fillStyle=p.col;
+    cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    cx.restore();
+  });
+  if(confettiParts.length>0)requestAnimationFrame(animConfetti);
+  else cx.clearRect(0,0,cc.width,cc.height);
+}
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+let toastT=null;
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${type} show`;
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ══════════════════════════════════
+   LOADER + INIT
+══════════════════════════════════ */
+const loader=document.getElementById('loader');
+setTimeout(()=>{loader.classList.add('hidden');newGame();},1200);
+
+// cursor on buttons
+document.querySelectorAll('.mbtn,.new-game-btn,.diff-btn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>curH(true));
+  el.addEventListener('mouseleave',()=>curH(false));
+});
+</script>
+</body>
+</html>
